@@ -14,14 +14,14 @@ flex_target(scanner
 )
 
 bison_target(parser
-  ${GRAMMAR}
+  grammar.y
   ${CMAKE_CURRENT_BINARY_DIR}/parser.cc
   COMPILE_FLAGS "--defines=${CMAKE_CURRENT_BINARY_DIR}/numgrammar.tab.hh")
 
 add_flex_bison_dependency(scanner parser)
 
-add_executable(${PROJECT_NAME} 
-  driver.cc  
+add_executable(${PROJECT_NAME}
+  driver.cc
   ${BISON_parser_OUTPUTS}
   ${FLEX_scanner_OUTPUTS}
 )

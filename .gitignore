@@ -1,0 +1,6 @@
+learning
+.vscode
+.DS_Store
+a.out
+lex.yy.cc
+build
