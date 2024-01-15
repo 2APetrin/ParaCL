@@ -60,7 +60,7 @@
 } */
 
 %token <int> NUMBER
-%token <std::string> ID
+%token <char*> ID
 
 
 
@@ -80,57 +80,61 @@
 
 %%
 
-program: comp { std::cout << "chich1" << std::endl; }
+program: comp { std::cout << "prog start" << std::endl; }
 ;
 
-comp: op SCOLON comp { std::cout << "chich2" << std::endl; }
-    | %empty         { std::cout << "chich3" << std::endl; }
+comp: op comp { std::cout << "comp" << std::endl; }
+    | %empty         { std::cout << "comp nothing" << std::endl; }
 ;
 
-op: assig        { std::cout << "chich4" << std::endl; }
-  | while        { std::cout << "chich5" << std::endl; }
-  | if           { std::cout << "chich6" << std::endl; }
-  | func         { std::cout << "chich7" << std::endl; }
-  | SLB comp SRB { std::cout << "chich8" << std::endl; }
+op: assig        { std::cout << "op assig" << std::endl; }
+  | while        { std::cout << "op while" << std::endl; }
+  | if           { std::cout << "op if" << std::endl; }
+  | func         { std::cout << "op func" << std::endl; }
+  | SLB comp SRB { std::cout << "op { comp }" << std::endl; }
 ;
 
-assig: ID EQ expr { std::cout << "chich9" << std::endl; }
-     | ID EQ SCAN { std::cout << "chich10" << std::endl; }
+assig: ID ASSIG expr SCOLON { std::cout << "assig rule" << std::endl; }
 ;
 
-expr: L GR  L { std::cout << "chich11" << std::endl; }
-    | L GRE L { std::cout << "chich12" << std::endl; }
-    | L BL  L { std::cout << "chich13" << std::endl; }
-    | L BLE L { std::cout << "chich14" << std::endl; }
-    | L EQ  L { std::cout << "chich15" << std::endl; }
-    | L       { std::cout << "chich16" << std::endl; }
+expr: L GR  L { std::cout << "L > L" << std::endl; }
+    | L GRE L { std::cout << "L >= L" << std::endl; }
+    | L BL  L { std::cout << "L < L" << std::endl; }
+    | L BLE L { std::cout << "L <= L" << std::endl; }
+    | L EQ  L { std::cout << "L == L" << std::endl; }
+    | L       { std::cout << "L single" << std::endl; }
 ;
 
-L: T ADD T { std::cout << "chich17" << std::endl; }
- | T SUB T { std::cout << "chich18" << std::endl; }
- | T       { std::cout << "chich19" << std::endl; }
+L: T Lsh       { std::cout << "L rule" << std::endl; }
 ;
 
-T: P MUL P { std::cout << "chich20" << std::endl; }
- | P DIV P { std::cout << "chich21" << std::endl; }
- | P       { std::cout << "chich22" << std::endl; }
+Lsh: ADD T Lsh { std::cout << "Lsh + T Lsh" << std::endl; }
+   | SUB T Lsh { std::cout << "Lsh - T Lsh" << std::endl; }
+   | %empty
+
+T: P Tsh       { std::cout << "T rule" << std::endl; }
 ;
 
-P: KLB expr KRB { std::cout << "chich23" << std::endl; }
- | NUMBER       { std::cout << "chich24" << std::endl; }
- | ID           { std::cout << "chich25" << std::endl; }
+Tsh: MUL P Tsh { std::cout << "Tsh * P Tsh" << std::endl; }
+   | DIV P Tsh { std::cout << "Tsh / P Tsh" << std::endl; }
+   | %empty
+
+P: KLB expr KRB { std::cout << "( expr )" << std::endl; }
+ | ID           { std::cout << "P id" << std::endl; }
+ | NUMBER       { std::cout << "P number" << std::endl; }
+ | SCAN         { std::cout << "P scan"    << std::endl; }
 ;
 
-if: IF KLB expr KRB op { std::cout << "chich26" << std::endl; }
+if: IF KLB expr KRB op { std::cout << "if rule" << std::endl; }
 ;
 
-while: WHILE KLB expr KRB op { std::cout << "chich27" << std::endl; }
+while: WHILE KLB expr KRB op { std::cout << "while rule" << std::endl; }
 ;
 
-func: FUNC KLB expr KRB { std::cout << "chich28" << std::endl; }
+func: FUNC KLB expr KRB SCOLON { std::cout << "func rule" << std::endl; }
 ;
 
-%%
+%%  
 
 namespace yy {
 

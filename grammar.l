@@ -15,33 +15,33 @@ ID      [a-z_]+
 
 {WS}              /* skip blanks and tabs */
 
-"+"               return yy::parser::token_type::ADD;
-"-"               return yy::parser::token_type::SUB;
-"*"               return yy::parser::token_type::MUL;
-"/"               return yy::parser::token_type::DIV;
-"?"               return yy::parser::token_type::SCAN;
-"="               return yy::parser::token_type::ASSIG;
+"+"               {std::cout << yytext << "\n"; return yy::parser::token_type::ADD;}
+"-"               {std::cout << yytext << "\n"; return yy::parser::token_type::SUB;}
+"*"               {std::cout << yytext << "\n"; return yy::parser::token_type::MUL;}
+"/"               {std::cout << yytext << "\n"; return yy::parser::token_type::DIV;}
+"?"               {std::cout << yytext << "\n"; return yy::parser::token_type::SCAN;}
+"="               {std::cout << yytext << "\n"; return yy::parser::token_type::ASSIG;}
 
-"("               return yy::parser::token_type::KLB;
-")"               return yy::parser::token_type::KRB;
-"{"               return yy::parser::token_type::SLB;
-"}"               return yy::parser::token_type::SRB;
+"("               {std::cout << yytext << "\n"; return yy::parser::token_type::KLB;}
+")"               {std::cout << yytext << "\n"; return yy::parser::token_type::KRB;}
+"{"               {std::cout << yytext << "\n"; return yy::parser::token_type::SLB;}
+"}"               {std::cout << yytext << "\n"; return yy::parser::token_type::SRB;}
 
-";"               return yy::parser::token_type::SCOLON;
+";"               {std::cout << yytext << "\n"; return yy::parser::token_type::SCOLON;}
 
-">"               return yy::parser::token_type::GR;
-">="              return yy::parser::token_type::GRE;
-"<"               return yy::parser::token_type::BL;
-"<="              return yy::parser::token_type::BLE;
-"=="              return yy::parser::token_type::EQ;
+">"               {std::cout << yytext << "\n"; return yy::parser::token_type::GR;}
+">="              {std::cout << yytext << "\n"; return yy::parser::token_type::GRE;}
+"<"               {std::cout << yytext << "\n"; return yy::parser::token_type::BL;}
+"<="              {std::cout << yytext << "\n"; return yy::parser::token_type::BLE;}
+"=="              {std::cout << yytext << "\n"; return yy::parser::token_type::EQ;}
 
-"if"              return yy::parser::token_type::IF;
-"while"           return yy::parser::token_type::WHILE;
-"print"           return yy::parser::token_type::FUNC;
+"if"              {std::cout << yytext << "\n"; return yy::parser::token_type::IF;}
+"while"           {std::cout << yytext << "\n"; return yy::parser::token_type::WHILE;}
+"print"           {std::cout << yytext << "\n"; return yy::parser::token_type::FUNC;}
 
-{ID}              return yy::parser::token_type::ID;
+{ID}              {std::cout << yytext << "\n"; return yy::parser::token_type::ID;}
 
-{DIGIT1}{DIGIT}*  return yy::parser::token_type::NUMBER;
-.                 return yy::parser::token_type::ERR;
+{DIGIT1}{DIGIT}*  {std::cout << yytext << "\n"; return yy::parser::token_type::NUMBER;}
+.                 {std::cout << yytext << "\n"; return yy::parser::token_type::ERR;}
 
 %%

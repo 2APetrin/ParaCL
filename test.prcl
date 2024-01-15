@@ -1,7 +1,1 @@
-cock = ?
-popa = 100
-
-while (cock < popa) {
-    print(cock);
-    cock = cock + 1;
-}
+popa = 10 + 2 + 3 + 4 + 5*12/10*2/(1+23);
