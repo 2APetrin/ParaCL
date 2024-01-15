@@ -16,33 +16,33 @@ ID      [a-z_]+
 
 {WS}              /* skip blanks and tabs */
 
-"+"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-"-"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-"*"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-"/"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-"?"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-"="               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
+"+"               return yy::parser::token_type::ADD
+"-"               return yy::parser::token_type::SUB
+"*"               return yy::parser::token_type::MUL
+"/"               return yy::parser::token_type::DIV
+"?"               return yy::parser::token_type::SCAN
+"="               return yy::parser::token_type::ASSIG
 
-"("               { cout << "open  br <" << yytext[0] << ">" << endl; return 1; }
-")"               { cout << "close br <" << yytext[0] << ">" << endl; return 1; }
-"{"               { cout << "open br  <" << yytext[0] << ">" << endl; return 1; }
-"}"               { cout << "close br <" << yytext[0] << ">" << endl; return 1; }
+"("               return yy::parser::token_type::KLB
+")"               return yy::parser::token_type::KRB
+"{"               return yy::parser::token_type::SLB
+"}"               return yy::parser::token_type::SRB
 
-";"               { cout << "end op <"   << yytext[0] << ">" << endl; return 1; }
+";"               return yy::parser::token_type::SCOLON
 
-"<"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-">"               { cout << "operator <" << yytext[0] << ">" << endl; return 1; }
-">="              { cout << "operator <" << yytext    << ">" << endl; return 1; }
-"<="              { cout << "operator <" << yytext    << ">" << endl; return 1; }
-"=="              { cout << "operator <" << yytext    << ">" << endl; return 1; }
+">"               return yy::parser::token_type::GR
+">="              return yy::parser::token_type::GRE
+"<"               return yy::parser::token_type::BL
+"<="              return yy::parser::token_type::BLE
+"=="              return yy::parser::token_type::EQ
 
-"if"              { cout << "operator <" << yytext    << ">" << endl; return 1; }
-"while"           { cout << "loop <"     << yytext    << ">" << endl; return 1; }
-"print"           { cout << "function <" << yytext    << ">" << endl; return 1; }
+"if"              return yy::parser::token_type::IF
+"while"           return yy::parser::token_type::WHILE
+"print"           return yy::parser::token_type::FUNC
 
-{ID}              { cout << "variable <" << yytext    << ">" << endl; return 1; }
+{ID}              return yy::parser::token_type::ID
 
-{DIGIT1}{DIGIT}*  { cout << "  number <" << yytext    << ">" << endl; return 1; }
-.                 { cout << " UNKNOWN <" << yytext[0] << ">" << endl; return 1; }
+{DIGIT1}{DIGIT}*  return yy::parser::token_type::NUMBER
+.                 return yy::parser::token_type::ERR
 
 %%
