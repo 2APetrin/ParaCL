@@ -54,13 +54,13 @@
   ERR
 ;
 
-%union {
-    char[32] id;
+/* %union {
+    char id[32];
     int  number;
-}
+} */
 
-%token <number> NUMBER
-%token <id> ID
+%token <int> NUMBER
+%token <std::string> ID
 
 
 
@@ -80,54 +80,54 @@
 
 %%
 
-program: comp
+program: comp { std::cout << "chich1" << std::endl; }
 ;
 
-comp: op SCOLON comp
-    | %empty
+comp: op SCOLON comp { std::cout << "chich2" << std::endl; }
+    | %empty         { std::cout << "chich3" << std::endl; }
 ;
 
-op: assig
-  | while
-  | if
-  | func
-  | SLB comp SRB
+op: assig        { std::cout << "chich4" << std::endl; }
+  | while        { std::cout << "chich5" << std::endl; }
+  | if           { std::cout << "chich6" << std::endl; }
+  | func         { std::cout << "chich7" << std::endl; }
+  | SLB comp SRB { std::cout << "chich8" << std::endl; }
 ;
 
-assig: ID EQ expr
-     | ID EQ SCAN
+assig: ID EQ expr { std::cout << "chich9" << std::endl; }
+     | ID EQ SCAN { std::cout << "chich10" << std::endl; }
 ;
 
-expr: L GR  L
-    | L GRE L
-    | L BL  L
-    | L BLE L
-    | L EQ  L
-    | L
+expr: L GR  L { std::cout << "chich11" << std::endl; }
+    | L GRE L { std::cout << "chich12" << std::endl; }
+    | L BL  L { std::cout << "chich13" << std::endl; }
+    | L BLE L { std::cout << "chich14" << std::endl; }
+    | L EQ  L { std::cout << "chich15" << std::endl; }
+    | L       { std::cout << "chich16" << std::endl; }
 ;
 
-L: T ADD T
- | T SUB T
- | T
+L: T ADD T { std::cout << "chich17" << std::endl; }
+ | T SUB T { std::cout << "chich18" << std::endl; }
+ | T       { std::cout << "chich19" << std::endl; }
 ;
 
-T: P MUL P
- | P DIV P
- | P
+T: P MUL P { std::cout << "chich20" << std::endl; }
+ | P DIV P { std::cout << "chich21" << std::endl; }
+ | P       { std::cout << "chich22" << std::endl; }
 ;
 
-P: KLB expr KRB
- | NUMBER
- | ID
+P: KLB expr KRB { std::cout << "chich23" << std::endl; }
+ | NUMBER       { std::cout << "chich24" << std::endl; }
+ | ID           { std::cout << "chich25" << std::endl; }
 ;
 
-if: IF KLB expr KRB op
+if: IF KLB expr KRB op { std::cout << "chich26" << std::endl; }
 ;
 
-while: WHILE KLB expr KRB op
+while: WHILE KLB expr KRB op { std::cout << "chich27" << std::endl; }
 ;
 
-func: FUNC KLB expr KRB
+func: FUNC KLB expr KRB { std::cout << "chich28" << std::endl; }
 ;
 
 %%
