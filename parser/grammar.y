@@ -80,18 +80,21 @@
 
 %%
 
-program: comp { std::cout << "prog start" << std::endl; }
+program: scope { std::cout << "prog start" << std::endl; }
 ;
 
-comp: op comp { std::cout << "comp" << std::endl; }
-    | %empty         { std::cout << "comp nothing" << std::endl; }
+scope: op scopesh { std::cout << "scope" << std::endl; }
+;
+
+scopesh: op scopesh { std::cout << "scopesh" << std::endl; }
+      | %empty
 ;
 
 op: assig        { std::cout << "op assig" << std::endl; }
   | while        { std::cout << "op while" << std::endl; }
   | if           { std::cout << "op if" << std::endl; }
   | func         { std::cout << "op func" << std::endl; }
-  | SLB comp SRB { std::cout << "op { comp }" << std::endl; }
+  | SLB scope SRB { std::cout << "op { comp }" << std::endl; }
 ;
 
 assig: ID ASSIG expr SCOLON { std::cout << "assig rule" << std::endl; }
@@ -111,6 +114,7 @@ L: T Lsh       { std::cout << "L rule" << std::endl; }
 Lsh: ADD T Lsh { std::cout << "Lsh + T Lsh" << std::endl; }
    | SUB T Lsh { std::cout << "Lsh - T Lsh" << std::endl; }
    | %empty
+;
 
 T: P Tsh       { std::cout << "T rule" << std::endl; }
 ;
@@ -118,6 +122,7 @@ T: P Tsh       { std::cout << "T rule" << std::endl; }
 Tsh: MUL P Tsh { std::cout << "Tsh * P Tsh" << std::endl; }
    | DIV P Tsh { std::cout << "Tsh / P Tsh" << std::endl; }
    | %empty
+;
 
 P: KLB expr KRB { std::cout << "( expr )" << std::endl; }
  | ID           { std::cout << "P id" << std::endl; }

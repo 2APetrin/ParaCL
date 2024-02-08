@@ -1,0 +1,7 @@
+cock = ?;
+popa = 10;
+
+while (cock < popa) {
+    print(cock);
+    cock = cock + 1;
+}
