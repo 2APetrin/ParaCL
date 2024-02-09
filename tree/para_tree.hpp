@@ -5,54 +5,80 @@
 
 namespace para_tree {
 
-enum class node_type {
-    SCOPE,
-
+enum class op_type {
     ADD,
     SUB,
     MUL,
-    DIV,
-
-    SCAN,
-    ASSIG,
-
-    IF,
-    WHILE,
-
-    GR,
-    GRE,
-    BL,
-    BLE,
-    EQ,
-
-    NUMBER,
-    ID
+    DIV
 };
 
 namespace detail {
 
-class inode {
-protected:
-    std::vector<const inode*> children_;
+struct inode {
+//    virtual void execute() const = 0;
 
-public:
-    virtual void add_child(const inode* chld) = 0;
+    virtual void dump() const = 0;
 
     virtual ~inode() = default;
 };
 
-struct scope : public inode {
-    using inode::children_;
+class scope : public inode {
+    std::vector<const inode*> children_;
 
-    scope() { std::cout << "ctor worked\n"; }
+public:
+    scope() = default;
 
-    void add_child(const inode* chld) override { children_.push_back(chld); std::cout << "push worked\n"; }
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        for (auto i : children_) {
+            std::cout << i << " ";
+            std::cout << typeid(*i).name() << std::endl;
+        }
 
-    void fuck_srp_dump() {
-        std::cout << "\nnode dump:" << std::endl;
-        for (auto i : children_)
-            std::cout << i << std::endl;
+        std::cout << std::endl;
     }
+
+    void add_child(const inode* chld) {
+        children_.push_back(chld);
+    }
+};
+
+class num : public inode {
+    int val_;
+
+public:
+    num(int val) : val_(val) {}
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "val = " << val_ << std::endl << std::endl;
+    }
+};
+
+class op : public inode {
+    op_type type_;
+    inode *l_, *r_;
+
+public:
+    op(op_type type, inode *l = nullptr, inode *r = nullptr) : type_(type), l_(l), r_(r) {}
+
+    void dump() const override {
+        std::cout << "DUMP\ntype " << static_cast<int>(type_) << " " << this << " " << typeid(*this).name() << std::endl;
+
+        if (l_) {
+            std::cout << "left  " << l_ << " ";
+            std::cout << typeid(*l_).name() << std::endl;
+        }
+        if (r_) {
+            std::cout << "right " << r_ << " ";
+            std::cout << typeid(*r_).name() << std::endl << std::endl;
+        }
+
+        std::cout << std::endl;
+    }
+
+    void setl(inode* node) { l_ = node; }
+    void setr(inode* node) { r_ = node; }
 };
 
 }

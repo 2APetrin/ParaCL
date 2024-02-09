@@ -3,6 +3,7 @@
 %{
 
 #include "numgrammar.tab.hh"
+#include "para_tree.hpp"
 
 %}
 
@@ -15,7 +16,7 @@ ID      [a-z_]+
 
 {WS}              /* skip blanks and tabs */
 
-"+"               {std::cout << yytext << "\n"; return yy::parser::token_type::ADD;}
+"+"               {std::cout << yytext << "\n"; return new }
 "-"               {std::cout << yytext << "\n"; return yy::parser::token_type::SUB;}
 "*"               {std::cout << yytext << "\n"; return yy::parser::token_type::MUL;}
 "/"               {std::cout << yytext << "\n"; return yy::parser::token_type::DIV;}

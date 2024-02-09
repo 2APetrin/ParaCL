@@ -74,37 +74,39 @@
 %nterm <int> NT_LOGIC
 %nterm <int> NT_T
 %nterm <int> NT_P */
+%nterm <int> scope
+%nterm <int> op
 
 
 %start program
 
 %%
 
-program: scope { std::cout << "prog start" << std::endl; }
+program: scope { std::cout << "AAOO " << $1 << std::endl; }
 ;
 
 scope: op scopesh { std::cout << "scope" << std::endl; }
 ;
 
-scopesh: op scopesh { std::cout << "scopesh" << std::endl; }
+scopesh: op scopesh { std::cout << "scopesh" << $1 << std::endl; }
       | %empty
 ;
 
-op: assig        { std::cout << "op assig" << std::endl; }
-  | while        { std::cout << "op while" << std::endl; }
-  | if           { std::cout << "op if" << std::endl; }
-  | func         { std::cout << "op func" << std::endl; }
+op: assig         { std::cout << "op assig"    << std::endl; }
+  | while         { std::cout << "op while"    << std::endl; }
+  | if            { std::cout << "op if"       << std::endl; }
+  | func          { std::cout << "op func"     << std::endl; }
   | SLB scope SRB { std::cout << "op { comp }" << std::endl; }
 ;
 
 assig: ID ASSIG expr SCOLON { std::cout << "assig rule" << std::endl; }
 ;
 
-expr: L GR  L { std::cout << "L > L" << std::endl; }
-    | L GRE L { std::cout << "L >= L" << std::endl; }
-    | L BL  L { std::cout << "L < L" << std::endl; }
-    | L BLE L { std::cout << "L <= L" << std::endl; }
-    | L EQ  L { std::cout << "L == L" << std::endl; }
+expr: L GR  L { std::cout << "L > L"    << std::endl; }
+    | L GRE L { std::cout << "L >= L"   << std::endl; }
+    | L BL  L { std::cout << "L < L"    << std::endl; }
+    | L BLE L { std::cout << "L <= L"   << std::endl; }
+    | L EQ  L { std::cout << "L == L"   << std::endl; }
     | L       { std::cout << "L single" << std::endl; }
 ;
 
