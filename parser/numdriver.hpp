@@ -7,10 +7,12 @@
 namespace yy {
 
 class NumDriver {
-  FlexLexer *plex_;
 
 public:
-  para_tree::inode* root_ = nullptr;
+  FlexLexer *plex_;
+  para_tree::scope* root_ = nullptr;
+  para_tree::scope* curr_scope_ = nullptr;
+
   NumDriver(FlexLexer *plex) : plex_(plex) {}
 
   parser::token_type yylex(parser::semantic_type *yylval) {
@@ -23,6 +25,14 @@ public:
 
         case yy::parser::token_type::ID:
             yylval->as<para_tree::inode*>() = new para_tree::id{ plex_->YYText() };
+            break;
+
+        case yy::parser::token_type::ADD:
+            yylval->as<para_tree::inode*>() = new para_tree::op{para_tree::op_type::ADD};
+            break;
+
+        case yy::parser::token_type::ASSIG:
+            yylval->as<para_tree::inode*>() = new para_tree::op{para_tree::op_type::ASSIG};
             break;
     }
 

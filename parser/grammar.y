@@ -62,62 +62,140 @@
 
 
 // non terminal
-%nterm <para_tree::scope*> scope
-%nterm <para_tree::op*> assig
+%nterm <para_tree::inode*> scope
+%nterm <para_tree::inode*> assig
+%nterm <para_tree::inode*> op
+%nterm <para_tree::inode*> expr
+%nterm <para_tree::inode*> L
+%nterm <para_tree::inode*> Lsh
+%nterm <para_tree::inode*> T
+%nterm <para_tree::inode*> Tsh
+%nterm <para_tree::inode*> P
+
 
 
 %start program
 
 %%
 
-program: scope { driver->root_ = new para_tree::scope{}; }
+program: scope { driver->root_ = new para_tree::scope{}; driver->curr_scope_ = driver->root_; driver->root_->dump(); }
 ;
 
-scope: op scopesh { $$.add_child($1); }
+scope: op scopesh { driver->curr_scope_->add_child($1); driver->curr_scope_->dump(); }
 ;
 
-scopesh: op scopesh { std::cout << "scopesh" << std::endl; }
+scopesh: op scopesh { driver->curr_scope_->add_child($1); }
       | %empty
 ;
 
-op: assig         { std::cout << "op assig"    << std::endl; }
+op: assig         { $$->dump(); $$ = $1; }
   /* | while         { std::cout << "op while"    << std::endl; }
   | if            { std::cout << "op if"       << std::endl; }
   | func          { std::cout << "op func"     << std::endl; }
   | SLB scope SRB { std::cout << "op { comp }" << std::endl; } */
 ;
 
-assig: ID ASSIG expr SCOLON { std::cout << "assig rule" << std::endl; }
+assig: ID ASSIG expr SCOLON { 
+    $3->dump();
+    // para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{"ass"});
+    // $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
+}
 ;
 
-expr: L GR  L { std::cout << "L > L"    << std::endl; }
+expr: L { $$ = $1; $$->dump(); } /* GR  L { std::cout << "L > L"    << std::endl; }
     | L GRE L { std::cout << "L >= L"   << std::endl; }
     | L BL  L { std::cout << "L < L"    << std::endl; }
     | L BLE L { std::cout << "L <= L"   << std::endl; }
     | L EQ  L { std::cout << "L == L"   << std::endl; }
-    | L       { std::cout << "L single" << std::endl; }
+    | L       { std::cout << "L single" << std::endl; } */
 ;
 
-L: T Lsh       { std::cout << "L rule" << std::endl; }
+L: T Lsh {
+    if ($2) {
+        auto tmp = static_cast<para_tree::op*>($2);
+        tmp->setl($1);
+        $$ = static_cast<para_tree::inode*>($2);
+    }
+    else {
+        $$ = $1;
+    }
+}
 ;
 
-Lsh: ADD T Lsh { std::cout << "Lsh + T Lsh" << std::endl; }
-   | SUB T Lsh { std::cout << "Lsh - T Lsh" << std::endl; }
+Lsh: ADD T Lsh {
+    if ($3) {
+        auto tmp = new para_tree::op{para_tree::op_type::ADD};
+        tmp->setr($2);
+        tmp->setl($$);
+        $$ = static_cast<para_tree::inode*>($3);
+    }
+    else {
+        auto tmp = new para_tree::op{para_tree::op_type::ADD};
+        tmp->setr($2);
+        $$ = static_cast<para_tree::inode*>(tmp);
+    }
+}
+   | SUB T Lsh {
+    if ($3) {
+        auto tmp = new para_tree::op{para_tree::op_type::SUB};
+        tmp->setr($2);
+        tmp->setl($$);
+        $$ = static_cast<para_tree::inode*>($3);
+    }
+    else {
+        auto tmp = new para_tree::op{para_tree::op_type::SUB};
+        tmp->setr($2);
+        $$ = static_cast<para_tree::inode*>(tmp);
+    }
+}
    | %empty
 ;
 
-T: P Tsh       { std::cout << "T rule" << std::endl; }
+T: P Tsh {
+    if ($2) {
+        auto tmp = static_cast<para_tree::op*>($2);
+        tmp->setl($1);
+        $$ = static_cast<para_tree::inode*>($2);
+    }
+    else {
+        $$ = $1;
+    }
+}
 ;
 
-Tsh: MUL P Tsh { std::cout << "Tsh * P Tsh" << std::endl; }
-   | DIV P Tsh { std::cout << "Tsh / P Tsh" << std::endl; }
+Tsh: MUL P Tsh {
+    if ($3) {
+        auto tmp = new para_tree::op{para_tree::op_type::MUL};
+        tmp->setr($2);
+        tmp->setl($$);
+        $$ = static_cast<para_tree::inode*>($3);
+    }
+    else {
+        auto tmp = new para_tree::op{para_tree::op_type::MUL};
+        tmp->setr($2);
+        $$ = static_cast<para_tree::inode*>(tmp);
+    }
+}
+   | DIV P Tsh {
+    if ($3) {
+        auto tmp = new para_tree::op{para_tree::op_type::DIV};
+        tmp->setr($2);
+        tmp->setl($$);
+        $$ = static_cast<para_tree::inode*>($3);
+    }
+    else {
+        auto tmp = new para_tree::op{para_tree::op_type::DIV};
+        tmp->setr($2);
+        $$ = static_cast<para_tree::inode*>(tmp);
+    }
+}
    | %empty
 ;
 
-P: KLB expr KRB { std::cout << "( expr )" << std::endl; }
- | ID           { std::cout << "P id" << std::endl; }
- | NUMBER       { std::cout << "P number" << std::endl; }
- | SCAN         { std::cout << "P scan"    << std::endl; }
+P: /* KLB expr KRB { $$ = $2; }
+ | */ ID           { $$ = static_cast<para_tree::inode*>(new para_tree::id{driver->plex_->YYText()}); }
+ | NUMBER          { $$ = static_cast<para_tree::inode*>(new para_tree::num{std::atoi(driver->plex_->YYText())}); }
+ /* | SCAN         { $$ = $1; } */
 ;
 
 /* if: IF KLB expr KRB op { std::cout << "if rule" << std::endl; }

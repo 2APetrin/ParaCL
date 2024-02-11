@@ -9,7 +9,8 @@ enum class op_type {
     ADD,
     SUB,
     MUL,
-    DIV
+    DIV,
+    ASSIG
 };
 
 struct inode {
@@ -29,8 +30,7 @@ public:
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         for (auto i : children_) {
-            std::cout << i << " ";
-            std::cout << typeid(*i).name() << std::endl;
+            i->dump();
         }
 
         std::cout << std::endl;
