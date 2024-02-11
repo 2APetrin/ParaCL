@@ -12,8 +12,6 @@ enum class op_type {
     DIV
 };
 
-namespace detail {
-
 struct inode {
 //    virtual void execute() const = 0;
 
@@ -22,7 +20,7 @@ struct inode {
     virtual ~inode() = default;
 };
 
-class scope : public inode {
+class scope final : public inode {
     std::vector<const inode*> children_;
 
 public:
@@ -43,7 +41,7 @@ public:
     }
 };
 
-class num : public inode {
+class num final : public inode {
     int val_;
 
 public:
@@ -55,7 +53,7 @@ public:
     }
 };
 
-class op : public inode {
+class op final : public inode {
     op_type type_;
     inode *l_, *r_;
 
@@ -81,6 +79,19 @@ public:
     void setr(inode* node) { r_ = node; }
 };
 
-}
+
+class id final : public inode {
+    const char* name_;
+
+public:
+    id(const char* name) : name_(name) {}
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "var name " << name_ << std::endl;
+
+        std::cout << std::endl;
+    }
+};
 
 }

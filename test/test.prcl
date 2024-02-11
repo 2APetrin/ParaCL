@@ -1,5 +1,5 @@
 cock = ?;
-popa = 10;
+popa = 10 + 2;
 
 while (cock < popa) {
     print(cock);
