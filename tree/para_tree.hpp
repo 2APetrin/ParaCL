@@ -66,10 +66,12 @@ public:
         if (l_) {
             std::cout << "left  " << l_ << " ";
             std::cout << typeid(*l_).name() << std::endl;
+            l_->dump();
         }
         if (r_) {
             std::cout << "right " << r_ << " ";
             std::cout << typeid(*r_).name() << std::endl << std::endl;
+            r_->dump();
         }
 
         std::cout << std::endl;
@@ -81,7 +83,7 @@ public:
 
 
 class id final : public inode {
-    const char* name_;
+    std::string name_;
 
 public:
     id(const char* name) : name_(name) {}

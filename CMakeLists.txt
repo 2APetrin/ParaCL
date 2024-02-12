@@ -8,7 +8,7 @@ if (NOT DEFINED GRAMMAR)
   set(GRAMMAR "grammar.y" CACHE STRING "file with grammar" FORCE)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -g -O0 -D DEBUG -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr -lgtest -lgmock -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -g -O0 -D DEBUG -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr") #-lgtest -lgmock -pthread
 
 flex_target(scanner
   ${CMAKE_CURRENT_SOURCE_DIR}/parser/grammar.l

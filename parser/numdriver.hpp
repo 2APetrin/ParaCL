@@ -20,11 +20,14 @@ public:
 
     switch (tt) {
         case yy::parser::token_type::NUMBER:
-            yylval->as<para_tree::inode*>() = new para_tree::num{ std::atoi(plex_->YYText()) };
+            //yylval->as<para_tree::inode*>() = new para_tree::num{ std::atoi(plex_->YYText()) };
+            yylval->as<int>() = std::atoi(plex_->YYText());
+            
             break;
 
         case yy::parser::token_type::ID:
-            yylval->as<para_tree::inode*>() = new para_tree::id{ plex_->YYText() };
+            //yylval->as<para_tree::inode*>() = new para_tree::id{ plex_->YYText() };
+            yylval->as<std::string>() = plex_->YYText();
             break;
 
         case yy::parser::token_type::ADD:
