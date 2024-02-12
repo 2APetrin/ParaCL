@@ -10,7 +10,7 @@
 {
     #include <iostream>
     #include "para_tree.hpp"
-//    #include <string>
+    #include <string>
 
     namespace yy { class NumDriver; } // forward decl of argument to parser
 }
@@ -78,17 +78,17 @@
 
 %%
 
-program: scope { driver->root_ = new para_tree::scope{}; driver->curr_scope_ = driver->root_; driver->root_->dump(); }
+program: scope { /*driver->root_->dump();*/ }
 ;
 
-scope: op scopesh { driver->curr_scope_->add_child($1); driver->curr_scope_->dump(); }
+scope: op scopesh { driver->root_ = new para_tree::scope{}; driver->curr_scope_ = driver->root_; $1->dump(); driver->curr_scope_->add_child($1); }
 ;
 
-scopesh: op scopesh { driver->curr_scope_->add_child($1); }
+scopesh: op scopesh { driver->curr_scope_->add_child($1); $1->dump(); }
       | %empty
 ;
 
-op: assig         { $$->dump(); $$ = $1; }
+op: assig         { $$ = $1; /*$$->dump();*/ }
   /* | while         { std::cout << "op while"    << std::endl; }
   | if            { std::cout << "op if"       << std::endl; }
   | func          { std::cout << "op func"     << std::endl; }
@@ -96,13 +96,12 @@ op: assig         { $$->dump(); $$ = $1; }
 ;
 
 assig: ID ASSIG expr SCOLON { 
-    $3->dump();
-    // para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{"ass"});
-    // $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
+    para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{ $1 });
+    $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
 }
 ;
 
-expr: L { $$ = $1; $$->dump(); } /* GR  L { std::cout << "L > L"    << std::endl; }
+expr: L { $$ = $1; /*$$->dump();*/ } /* GR  L { std::cout << "L > L"    << std::endl; }
     | L GRE L { std::cout << "L >= L"   << std::endl; }
     | L BL  L { std::cout << "L < L"    << std::endl; }
     | L BLE L { std::cout << "L <= L"   << std::endl; }
@@ -124,10 +123,11 @@ L: T Lsh {
 
 Lsh: ADD T Lsh {
     if ($3) {
-        auto tmp = new para_tree::op{para_tree::op_type::ADD};
-        tmp->setr($2);
-        tmp->setl($$);
-        $$ = static_cast<para_tree::inode*>($3);
+        auto tmp  = new para_tree::op{para_tree::op_type::ADD};
+        auto tmp2 = static_cast<para_tree::op*>($3);
+        tmp2->setl($2);
+        tmp->setr($3);
+        $$ = static_cast<para_tree::inode*>(tmp);
     }
     else {
         auto tmp = new para_tree::op{para_tree::op_type::ADD};
@@ -193,7 +193,7 @@ Tsh: MUL P Tsh {
 ;
 
 P: /* KLB expr KRB { $$ = $2; }
- | */ ID           { $$ = static_cast<para_tree::inode*>(new para_tree::id{driver->plex_->YYText()}); }
+ | */ ID           { std::cout << "HUI\n"; $$ = static_cast<para_tree::inode*>(new para_tree::id{$1}); }
  | NUMBER          { $$ = static_cast<para_tree::inode*>(new para_tree::num{std::atoi(driver->plex_->YYText())}); }
  /* | SCAN         { $$ = $1; } */
 ;
