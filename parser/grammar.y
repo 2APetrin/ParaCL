@@ -58,7 +58,7 @@
 
 // terminal tokens
 %token <int> NUMBER
-%token <std::string> ID
+%token <const char*> ID
 
 
 // non terminal
@@ -78,34 +78,32 @@
 
 %%
 
-program: scope { driver->root_->dump(); }
+program: scope { std::cout << driver->root_ << std::endl;
+                 driver->root_->dump(); } // there is main scope created in driver :)
 ;
 
-scope: op scopesh { driver->curr_scope_->add_child($1); driver->curr_scope_->dump(); }
+scope: op scopesh { driver->curr_scope_->add_child(static_cast<para_tree::inode*>($1)); }
 ;
 
-scopesh: op scopesh { if (driver->curr_scope_ == nullptr) {
-                        driver->curr_scope_ == new para_tree::scope{};
-                    }
-                        driver->curr_scope_->add_child($1); }
+scopesh: op scopesh { driver->curr_scope_->add_child(static_cast<para_tree::inode*>($1)); }
       | %empty
 ;
 
 op: assig         { $$ = $1; }
-  /* | while         { std::cout << "op while"    << std::endl; }
-  | if            { std::cout << "op if"       << std::endl; }
+  /* | while         { std::cout << "op while"    << std::endl; }   ***add scope here and below***
+  | if            { std::cout << "op if"       << std::endl; }      
   | func          { std::cout << "op func"     << std::endl; }
   | SLB scope SRB { std::cout << "op { comp }" << std::endl; } */
 ;
 
 assig: ID ASSIG expr SCOLON { 
-    $3->dump();
-    // para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{"ass"});
-    // $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
+    para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{$1});
+    std::cout << "penis = " << typeid($1).name() << std::endl;
+    $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
 }
 ;
 
-expr: L { $$ = $1; $$->dump(); } /* GR  L { std::cout << "L > L"    << std::endl; }
+expr: L { $$ = $1; /*$$->dump();*/ } /* GR  L { std::cout << "L > L"    << std::endl; }
     | L GRE L { std::cout << "L >= L"   << std::endl; }
     | L BL  L { std::cout << "L < L"    << std::endl; }
     | L BLE L { std::cout << "L <= L"   << std::endl; }
