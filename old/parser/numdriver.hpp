@@ -3,6 +3,9 @@
 #include "numgrammar.tab.hh"
 #include "para_tree.hpp"
 #include <FlexLexer.h>
+#include <cstring>
+#include <string>
+
 
 namespace yy {
 
@@ -20,11 +23,13 @@ public:
 
     switch (tt) {
         case yy::parser::token_type::NUMBER:
+            yy::parser::make_ADD
             yylval->as<int>() = std::atoi(plex_->YYText());
             break;
 
         case yy::parser::token_type::ID:
-            yylval->as<std::string>() = plex_->YYText();
+            std::cout << "case_id=" << plex_->YYText() << "\n";
+            yylval->as<std::string>() = std::string(strdup(plex_->YYText()));
             break;
 
         case yy::parser::token_type::ADD:
@@ -34,6 +39,7 @@ public:
         case yy::parser::token_type::ASSIG:
             yylval->as<para_tree::inode*>() = new para_tree::op{para_tree::op_type::ASSIG};
             break;
+        default: break;
     }
 
     return tt;

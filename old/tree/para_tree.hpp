@@ -86,7 +86,7 @@ class id final : public inode {
     std::string name_;
 
 public:
-    id(std::string str) : name_(str) {}
+    id(std::string str) : name_(str) { std::cout << "in id ctor=" << name_; dump();}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;

@@ -73,7 +73,6 @@
 %nterm <para_tree::inode*> P
 
 
-
 %start program
 
 %%
@@ -95,8 +94,11 @@ op: assig         { $$ = $1; /*$$->dump();*/ }
   | SLB scope SRB { std::cout << "op { comp }" << std::endl; } */
 ;
 
-assig: ID ASSIG expr SCOLON { 
-    para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{ $1 });
+assig: ID ASSIG expr SCOLON {
+    printf("hui2=%p\n", $1);
+    std::cout << "var=" << $1 << std::endl;
+    para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{$1});
+    std::cout << "penis = " << typeid($1).name() << std::endl;
     $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
 }
 ;

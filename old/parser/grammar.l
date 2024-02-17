@@ -15,7 +15,7 @@ ID      [a-z_]+
 
 {WS}              /* skip blanks and tabs */
 
-"+"               { return yy::parser::token_type::ADD; }
+"+"               { return yy::parser::make_ADD(yytext); }
 "-"               { return yy::parser::token_type::SUB; }
 "*"               { return yy::parser::token_type::MUL; }
 "/"               { return yy::parser::token_type::DIV; }
@@ -40,7 +40,7 @@ ID      [a-z_]+
 "while"           { return yy::parser::token_type::WHILE; }
 "print"           { return yy::parser::token_type::FUNC;  }
 
-{ID}              { return yy::parser::token_type::ID; }
+{ID}              { return yy::parser::make_ID(yytext); }
 
 {DIGIT1}{DIGIT}*  { return yy::parser::token_type::NUMBER; }
 .                 { return yy::parser::token_type::ERR;    }
