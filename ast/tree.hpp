@@ -189,7 +189,7 @@ public:
 //---------------------------rule of zero---------------------------
 class node_manager {
 protected:
-    std::vector<std::unique_ptr<i_node*>> node_container_;
+    std::vector<std::unique_ptr<i_node>> node_container_;
 
 protected:
     node_manager()  = default;
@@ -212,13 +212,33 @@ class ast_tree final : private detail::node_manager {
 public:
     ast_tree() = default;
 
+//--------------------------------------------------------
     template <op_type type>
     node_ptr make_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        std::cout << static_cast<int>(type);
-        auto node = new detail::para_operator<type>{l, r};
-        node_container_.push_back(std::make_unique<node_ptr>(static_cast<node_ptr>(node)));
-        return node;
+        detail::para_operator<type>* node = new detail::para_operator<type>{l, r};
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        return node_container_.back().get();
     }
+
+//--------------------------------------------------------
+    node_ptr make_number(int val) {
+        detail::number* node = new detail::number{val};
+
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        return node_container_.back().get();
+    }
+
+//--------------------------------------------------------
+    node_ptr make_identifier(std::string)
 
     void dump_cont() const {
         std::cout << "CONTAINER DUMP\n";
