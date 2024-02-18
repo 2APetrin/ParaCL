@@ -58,7 +58,7 @@
 
 // terminal tokens
 %token <int> NUMBER
-%token <const char*> ID
+%token <para_tree::inode*> ID
 
 
 // non terminal
@@ -96,10 +96,10 @@ op: assig         { $$ = $1; }
   | SLB scope SRB { std::cout << "op { comp }" << std::endl; } */
 ;
 
-assig: ID ASSIG expr SCOLON { 
-    para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{$1});
-    std::cout << "penis = " << typeid($1).name() << std::endl;
-    $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, tmp, $3});
+assig: ID ASSIG expr SCOLON {
+    // std::cout << "penis = " << driver->plex_->YYText() << std::endl;
+    // para_tree::inode* tmp = static_cast<para_tree::inode*>(new para_tree::id{$1});
+    $$ = static_cast<para_tree::inode*>(new para_tree::op{para_tree::op_type::ASSIG, $1, $3});
 }
 ;
 
@@ -128,7 +128,7 @@ Lsh: ADD T Lsh {
         auto tmp  = new para_tree::op{para_tree::op_type::ADD};
         auto tmp2 = static_cast<para_tree::op*>($3);
         tmp2->setl($2);
-        tmp->setr($3);
+        tmp->setr(tmp2);
         $$ = static_cast<para_tree::inode*>(tmp);
     }
     else {
@@ -195,7 +195,7 @@ Tsh: MUL P Tsh {
 ;
 
 P: /* KLB expr KRB { $$ = $2; }
- | */ ID           { $$ = static_cast<para_tree::inode*>(new para_tree::id{driver->plex_->YYText()}); }
+ | */ ID           { $$ = static_cast<para_tree::inode*>($1); }
  | NUMBER          { $$ = static_cast<para_tree::inode*>(new para_tree::num{$1}); }
  /* | SCAN         { $$ = $1; } */
 ;
