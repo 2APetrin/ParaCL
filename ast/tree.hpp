@@ -33,7 +33,7 @@ struct i_node {
     virtual     ~i_node() = default;
 };
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
 class number final : public i_node {
     int val_;
 
@@ -48,7 +48,7 @@ public:
     void execute() const override { std::cout << "num\n"; }
 };
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
 class identifier final : public i_node {
     std::string name_;
 
@@ -63,7 +63,7 @@ public:
     void execute() const override { std::cout << "id\n"; }
 };
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
 class scope final : public i_node {
     std::vector<const i_node*> children_;
 
@@ -74,7 +74,7 @@ public:
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         std::cout << "{\n";
 
-        for (auto i : children_) {
+        for (auto && i : children_) {
             i->dump();
         }
 
@@ -86,11 +86,11 @@ public:
     void execute() const override { std::cout << "scope\n"; }
 };
 
-//--------------------------------------------------------
-class two_arg : public i_node {
+//---------------------------------------------------------------------
+class op_base : public i_node {
     i_node *l_, *r_;
 public:
-    two_arg(i_node *l = nullptr, i_node *r = nullptr) : l_(l), r_(r) {}
+    op_base(i_node *l = nullptr, i_node *r = nullptr) : l_(l), r_(r) {}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
@@ -99,89 +99,89 @@ public:
     }
 
     void setl(i_node *newl) { l_ = newl; }
-    void setr(i_node *newr) { l_ = newr; }
+    void setr(i_node *newr) { r_ = newr; }
 };
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
 template<op_type type>
-class para_operator final : public two_arg { };
+class para_operator final : public op_base { };
 
-//--------------------------------------------------------
-template<> class para_operator<op_type::ADD> final : public two_arg {
+//---------------------------------------------------------------------
+template<> class para_operator<op_type::ADD> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "op add\n"; }
 };
 
-template<> class para_operator<op_type::SUB> final : public two_arg {
+template<> class para_operator<op_type::SUB> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "op sub\n"; }
 };
 
-template<> class para_operator<op_type::MUL> final : public two_arg {
+template<> class para_operator<op_type::MUL> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "op mul\n"; }
 };
 
-template<> class para_operator<op_type::DIV> final : public two_arg {
+template<> class para_operator<op_type::DIV> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "op div\n"; }
 };
 
-template<> class para_operator<op_type::GR> final : public two_arg {
+template<> class para_operator<op_type::GR> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "gr op\n"; }
 };
 
-template<> class para_operator<op_type::GRE> final : public two_arg {
+template<> class para_operator<op_type::GRE> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "gre op\n"; }
 };
 
-template<> class para_operator<op_type::BL> final : public two_arg {
+template<> class para_operator<op_type::BL> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "bl op\n"; }
 };
 
-template<> class para_operator<op_type::BLE> final : public two_arg {
+template<> class para_operator<op_type::BLE> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "ble op\n"; }
 };
 
-template<> class para_operator<op_type::EQ> final : public two_arg {
+template<> class para_operator<op_type::EQ> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "gr op\n"; }
 };
 
-template<> class para_operator<op_type::SCAN> final : public two_arg {
+template<> class para_operator<op_type::SCAN> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "scan op\n"; }
 };
 
-template<> class para_operator<op_type::ASSIG> final : public two_arg {
+template<> class para_operator<op_type::ASSIG> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "assig op\n"; }
 };
 
-template<> class para_operator<op_type::IF> final : public two_arg {
+template<> class para_operator<op_type::IF> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "if op\n"; }
 };
 
-template<> class para_operator<op_type::WHILE> final : public two_arg {
+template<> class para_operator<op_type::WHILE> final : public op_base {
 public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr) : two_arg(l, r) {}
+    para_operator(i_node *l = nullptr, i_node *r = nullptr) : op_base(l, r) {}
     void execute() const override { std::cout << "while op\n"; }
 };
 
@@ -212,7 +212,7 @@ class ast_tree final : private detail::node_manager {
 public:
     ast_tree() = default;
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
     template <op_type type>
     node_ptr make_op(node_ptr l = nullptr, node_ptr r = nullptr) {
         detail::para_operator<type>* node = new detail::para_operator<type>{l, r};
@@ -225,7 +225,7 @@ public:
         return node_container_.back().get();
     }
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
     node_ptr make_number(int val) {
         detail::number* node = new detail::number{val};
 
@@ -237,12 +237,42 @@ public:
         return node_container_.back().get();
     }
 
-//--------------------------------------------------------
-    node_ptr make_identifier(std::string)
+//---------------------------------------------------------------------
+    node_ptr make_identifier(std::string str) {
+        detail::identifier* node = new detail::identifier{str};
+
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        return node_container_.back().get();
+    }
+
+//---------------------------------------------------------------------
+    node_ptr make_scope() {
+        detail::scope* node = new detail::scope{};
+
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        return node_container_.back().get();
+    }
+
+//---------------------------------------------------------------------
+//    int execute_tree() const { }
+
+//---------------------------------------------------------------------
+    void set_root(node_ptr newroot) { root_ = newroot; }
 
     void dump_cont() const {
         std::cout << "CONTAINER DUMP\n";
-        for (auto i = node_container_.begin(), e = node_container_.end(); i != e; ++i) std::cout << *i << "\n";
+        for (auto i = node_container_.begin(), e = node_container_.end(); i != e; ++i) {
+            (*i)->execute();
+            std::cout << " " << *i << "\n";
+        }
     }
 };
 
