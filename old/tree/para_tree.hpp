@@ -30,15 +30,13 @@ public:
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         for (auto i : children_) {
-            if (i) i->dump();
+            i->dump();
         }
 
         std::cout << std::endl;
     }
 
-    void add_child(const inode *chld) {
-        std::cout << "CHILD IN TIME=" << chld << std::endl;
-        std::cout << "child added" << std::endl;
+    void add_child(const inode* chld) {
         children_.push_back(chld);
     }
 };
@@ -68,12 +66,10 @@ public:
         if (l_) {
             std::cout << "left  " << l_ << " ";
             std::cout << typeid(*l_).name() << std::endl;
-            l_->dump();
         }
         if (r_) {
             std::cout << "right " << r_ << " ";
             std::cout << typeid(*r_).name() << std::endl << std::endl;
-            r_->dump();
         }
 
         std::cout << std::endl;
@@ -85,10 +81,10 @@ public:
 
 
 class id final : public inode {
-    std::string name_;
+    const char* name_;
 
 public:
-    id(const char* name) : name_(name) { std::cout << "id ctor:\n" << name << " " << name_ << std::endl; }
+    id(const char* name) : name_(name) {}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;

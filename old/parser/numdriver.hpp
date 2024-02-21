@@ -10,12 +10,10 @@ class NumDriver {
 
 public:
   FlexLexer *plex_;
-  para_tree::scope* curr_scope_ = nullptr;
   para_tree::scope* root_ = nullptr;
+  para_tree::scope* curr_scope_ = nullptr;
 
-  NumDriver(FlexLexer *plex) : plex_(plex),
-                               curr_scope_(new para_tree::scope{}),
-                               root_(curr_scope_) {}
+  NumDriver(FlexLexer *plex) : plex_(plex) {}
 
   parser::token_type yylex(parser::semantic_type *yylval) {
     parser::token_type tt = static_cast<parser::token_type>(plex_->yylex());
@@ -23,7 +21,6 @@ public:
     switch (tt) {
         case yy::parser::token_type::NUMBER:
             yylval->as<para_tree::inode*>() = new para_tree::num{ std::atoi(plex_->YYText()) };
-            
             break;
 
         case yy::parser::token_type::ID:
@@ -37,7 +34,6 @@ public:
         case yy::parser::token_type::ASSIG:
             yylval->as<para_tree::inode*>() = new para_tree::op{para_tree::op_type::ASSIG};
             break;
-        default: break;
     }
 
     return tt;
