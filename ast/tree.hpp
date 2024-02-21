@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include "symtab.hpp"
 
 namespace para_tree {
 
@@ -48,27 +49,17 @@ public:
     void execute() const override { std::cout << "num\n"; }
 };
 
-//---------------------------------------------------------------------
-class identifier final : public i_node {
-    std::string name_;
-
-public:
-    identifier(std::string str) : name_(str) {}
-
-    void dump() const override {
-        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
-        std::cout << "var_name=" << name_ << std::endl << std::endl;
-    }
-
-    void execute() const override { std::cout << "id\n"; }
-};
 
 //---------------------------------------------------------------------
 class scope final : public i_node {
     std::vector<const i_node*> children_;
 
+    scope* parent_scope_;
+
+    para_symtab::symtab symtab_;
+
 public:
-    scope() = default;
+    scope(scope* scope = nullptr) : parent_scope_(scope) {}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
@@ -84,6 +75,44 @@ public:
     void add_child(const i_node* chld) { children_.push_back(chld); }
 
     void execute() const override { std::cout << "scope\n"; }
+
+    //---------------------work with symtab-----------------------
+    void push_id(std::string name, int value = 0) { symtab_.push_id(name, value); }
+
+    scope* is_visible(std::string name) { 
+        if (symtab_.is_visible(name)) return this;
+
+        scope* curr = parent_scope_;
+        
+        while (curr != nullptr) {
+            if (curr->symtab_.is_visible(name)) return curr;
+
+            curr = curr->parent_scope_;
+        }
+        return nullptr;
+    }
+
+    void set_value(std::string name, int value) { symtab_.set_value(name, value); }
+};
+
+//---------------------------------------------------------------------
+class identifier final : public i_node {
+    std::string name_;
+
+    scope* scope_;
+
+public:
+    identifier(std::string str, scope* scp = nullptr) : name_(str), scope_(scp) {}
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "var_name=" << name_ << std::endl << std::endl;
+    }
+
+    void execute() const override { std::cout << "id\n"; }
+
+    //-------------------scope and symtab part-------------------------
+    void set_value(int value) { scope_->set_value(name_, value); }
 };
 
 //---------------------------------------------------------------------
@@ -238,8 +267,8 @@ public:
     }
 
 //---------------------------------------------------------------------
-    node_ptr make_identifier(std::string str) {
-        detail::identifier* node = new detail::identifier{str};
+    node_ptr make_identifier(std::string str, detail::scope* scp = nullptr) {
+        detail::identifier* node = new detail::identifier{str, scp};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
         std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
@@ -250,8 +279,8 @@ public:
     }
 
 //---------------------------------------------------------------------
-    node_ptr make_scope() {
-        detail::scope* node = new detail::scope{};
+    node_ptr make_scope(detail::scope* parent_scope = nullptr) {
+        detail::scope* node = new detail::scope{parent_scope};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
         std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
