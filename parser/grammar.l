@@ -1,4 +1,5 @@
-%option c++ noyywrap nounput noinput batch debug
+
+%option nounput noinput batch debug 
 
 %{
 
@@ -13,6 +14,7 @@ DIGIT1  [1-9]
 ID      [a-z_]+
 
 %{
+    #define yyterminate() yy::parser::make_YYEOF(loc);
     #define YY_USER_ACTION loc.columns(yyleng);
 %}
 %%
@@ -54,5 +56,7 @@ ID      [a-z_]+
 
 {DIGIT1}{DIGIT}*  { return yy::parser::make_NUMBER(std::atoi(yytext), loc); }
 .                 { throw yy::parser::syntax_error(loc, "invalid character: " + std::string(yytext)); }
+
+<<EOF>>     { return yyterminate(); }
 
 %%

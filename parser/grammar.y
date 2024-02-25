@@ -22,13 +22,18 @@
 }
 
 
-%code
+%code provides
 {
     #include "numdriver.hpp"
 
-    #define YY_DECL yy::parser::symbol_type yylex (yy::NumDriver* driver)
+    #define YY_DECL yy::parser::symbol_type yylex(yy::NumDriver* driver)
         
     YY_DECL;
+}
+
+%code
+{
+    
 }
 
 
@@ -197,6 +202,7 @@ Tsh: MUL P Tsh {
 
 P: /* KLB expr KRB { $$ = $2; }| */ 
     ID           
+
     { 
         std::cout << "id: id_name = " << $1 << std::endl;
 
