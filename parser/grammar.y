@@ -88,13 +88,13 @@
 
 %%
 
-program: scope { /*driver->tree.execute_tree()*/ }
+program: scope { /*driver->tree.execute_tree()*/ driver->curr_scope_->dump(); driver->tree.set_root(driver->curr_scope_); driver->tree.graphviz_dump(); }
 ;
 
-scope: op scopesh { driver->curr_scope_->add_child($1); $1->dump(); }
+scope: op scopesh { driver->curr_scope_->add_child($1); }
 ;
 
-scopesh: op scopesh { driver->curr_scope_->add_child($1); $1->dump(); }
+scopesh: op scopesh { driver->curr_scope_->add_child($1); }
       | %empty
 ;
 

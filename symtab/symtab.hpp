@@ -20,9 +20,9 @@ public:
 
     void set_value(std::string name, int value) {
         auto search = table_.find(name);
-    
+
         if (search != table_.end()) search->second = value;
-        
+
         else throw std::runtime_error("Try to set unvisible / not existing var");
     }
 };
