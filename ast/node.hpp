@@ -24,7 +24,7 @@ enum class op_type {
     IF,
     WHILE,
 
-    ERROR
+    ERROR = -1
 };
 
 

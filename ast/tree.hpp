@@ -23,7 +23,7 @@ public:
 //---------------------------------------------------------------------
     template <op_type type>
     node_ptr make_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        detail::para_operator<type>* node = new detail::para_operator<type>{l, r};
+        detail::para_operator<type>* node = new detail::para_operator<type>{l, r, type};
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
 
         std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
