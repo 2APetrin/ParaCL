@@ -27,13 +27,13 @@
     #include "numdriver.hpp"
 
     #define YY_DECL yy::parser::symbol_type yylex(yy::NumDriver* driver)
-        
+
     YY_DECL;
 }
 
 %code
 {
-    
+
 }
 
 
@@ -201,7 +201,7 @@ Tsh: MUL P Tsh {
 ;
 
 P: /* KLB expr KRB { $$ = $2; }| */ 
-    ID           
+    ID
 
     { 
         std::cout << "id: id_name = " << $1 << std::endl;
@@ -211,8 +211,8 @@ P: /* KLB expr KRB { $$ = $2; }| */
             std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
             $$ = driver->tree.make_identifier("UNDEFIND");
         }
-        
-        else {  
+
+        else {
             $$ = driver->tree.make_identifier($1, driver->curr_scope_);
         }
     }

@@ -1,49 +1,42 @@
 #pragma once
 
-#include <fstream>
+#include "op_type.hpp"
 #include "symtab.hpp"
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 namespace para_tree {
 
-//---------------------------------------------------------------------
-enum class op_type {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
 
-    GR,
-    GRE,
-    BL,
-    BLE,
-    EQ,
-
-    SCAN,
-    ASSIG,
-
-    IF,
-    WHILE,
-
-    ERROR = -1
-};
-
-
-//----------------------------------DETAIL----------------------------------
+//--------------------------------DETAIL--------------------------------
 namespace detail {
 
+//----------------------------------------------------------------------
 struct i_node {
-    virtual void execute() const = 0;
-    virtual void dump() const = 0;
     virtual void graphviz_dump(std::ofstream&) const = 0;
+    virtual void dump() const = 0;
     virtual     ~i_node() = default;
 };
 
-//---------------------------------------------------------------------
-class number final : public i_node {
+//----------------------------------------------------------------------
+struct i_executable : public virtual i_node {
+    virtual void execute() const = 0;
+};
+
+//----------------------------------------------------------------------
+struct i_calculatable : public virtual i_node {
+    virtual int calc() const = 0;
+};
+
+//----------------------------------------------------------------------
+class number final : public i_calculatable {
     int val_;
 
 public:
     number(int val) : val_(val) {}
+
+    int calc() const override { return val_; }
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
@@ -53,18 +46,14 @@ public:
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {val=" << val_ << "}}\", style = \"filled\", fillcolor = \"#FCE883\"];\n";
     }
-
-    void execute() const override { std::cout << "num\n"; }
 };
 
-
-//---------------------------------------------------------------------
-class scope final : public i_node {
-    std::vector<const i_node*> children_;
-
-    scope* parent_scope_;
+//----------------------------------------------------------------------
+class scope final : public i_executable {
+    std::vector<const i_executable*> children_;
 
     para_symtab::symtab symtab_;
+    scope* parent_scope_;
 
 public:
     scope(scope* scope = nullptr) : parent_scope_(scope) {}
@@ -73,28 +62,27 @@ public:
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         std::cout << "{\n";
 
-        for (auto && i : children_) {
-            i->dump();
-        }
+        for (auto && i : children_) i->dump();
 
         std::cout << "}\n\n";
     }
 
     void graphviz_dump(std::ofstream& out) const override {
-        std::cout << "label0\n";
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {scope}}\", style = \"filled\", fillcolor = \"#9ACEEB\"];\n";
 
         for (auto && i : children_) {
             std::cout << "label1\n";
             i->graphviz_dump(out);
             out << "    node_" << this << "->node_" << &*i << " [color = \"#293133\"];\n";
-            //out << "    node_" << *i << "->node_" << this << " [color = \"#140F0B\", style = dotted];\n";
         }
     }
 
-    void add_child(const i_node* chld) { children_.push_back(chld); }
+    void add_child(const i_executable* chld) { children_.push_back(chld); }
 
-    void execute() const override { std::cout << "scope\n"; }
+    void execute() const override {
+        std::cout << "scope execution\n";
+        for (auto && i : children_) { i->execute(); }
+    }
 
     //---------------------work with symtab-----------------------
     void push_id(std::string name, int value = 0) { symtab_.push_id(name, value); }
@@ -112,13 +100,14 @@ public:
         return nullptr;
     }
 
-    void set_value(std::string name, int value) { symtab_.set_value(name, value); }
+    void set_value(std::string &name, int value)  { symtab_.set_value(name, value); }
+    int  get_value(const std::string &name) const { return symtab_.get_value(name); }
 };
 
-//---------------------------------------------------------------------
-class identifier final : public i_node {
+//----------------------------------------------------------------------
+class identifier final : public i_calculatable {
     std::string name_;
-    scope* scope_;
+    scope*      scope_;
 
 public:
     identifier(std::string str, scope* scp = nullptr) : name_(str), scope_(scp) {}
@@ -132,18 +121,19 @@ public:
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {name=" << name_ << "}}\", style = \"filled\", fillcolor = \"#CDA4DE\"];\n";
     }
 
-    void execute() const override { std::cout << "id\n"; }
-
-    //-------------------scope and symtab part-------------------------
+    //----------------------scope and symtab part----------------------
+    int calc() const override { return scope_->get_value(name_); }
     void set_value(int value) { scope_->set_value(name_, value); }
 };
 
-//---------------------------------------------------------------------
-class op_base : public i_node {
+//----------------------------------------------------------------------
+struct two_child : public virtual i_node {
+protected:
     i_node *l_, *r_;
     op_type type_;
+
 public:
-    op_base(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : l_(l), r_(r), type_(type) {}
+    two_child(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : l_(l), r_(r), type_(type) {}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
@@ -164,104 +154,128 @@ public:
     void setr(i_node *newr) { r_ = newr; }
 };
 
+struct single_child : public virtual i_node {
+    i_node *child_;
+    op_type type_;
 
-//---------------------------------------------------------------------
+public:
+    single_child(i_node *child = nullptr, op_type type = op_type::ERROR) : child_(child), type_(type) {}
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "one child =" << child_ << std::endl;
+    }
+
+    void graphviz_dump(std::ofstream& out) const override {
+        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
+
+        child_->graphviz_dump(out);
+        out << "    node_" << this << "->node_" << child_ << " [color = \"#293133\"];\n";
+    }
+
+    void set_child(i_node *newc) { child_ = newc; }
+};
+
+//----------------------------------------------------------------------
 template<op_type type>
-class para_operator final : public op_base { };
+struct exec_d_op final : public i_executable, public two_child { };
 
+template<>
+struct exec_d_op<op_type::ASSIG> final : public i_executable, public two_child {
+    exec_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_executable(), two_child(l, r, type) {}
 
-template<> class para_operator<op_type::ADD> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "op add\n"; }
+    void execute() const override {
+        auto rs = dynamic_cast<number*>(r_);
+        dynamic_cast<identifier*>(l_)->set_value(rs->calc());
+    }
 };
 
-template<> class para_operator<op_type::SUB> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "op sub\n"; }
+template<>
+struct exec_d_op<op_type::IF> final : public i_executable, public two_child {
+    exec_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_executable(), two_child(l, r, type) {}
+    void execute() const override { std::cout << "op if\n"; }
 };
 
-template<> class para_operator<op_type::MUL> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "op mul\n"; }
+template<>
+struct exec_d_op<op_type::WHILE> final : public i_executable, public two_child {
+    exec_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_executable(), two_child(l, r, type) {}
+    void execute() const override { std::cout << "op while\n"; }
 };
 
-template<> class para_operator<op_type::DIV> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "op div\n"; }
+//----------------------------------------------------------------------
+template<op_type type>
+struct exec_s_op final : public i_executable, public single_child { };
+
+template<>
+struct exec_s_op<op_type::SCAN> final : public i_executable, public single_child {
+    exec_s_op(i_node *chld = nullptr, op_type type = op_type::ERROR) : i_node(), i_executable(), single_child(chld, type) {}
+
+    void execute() const override {
+        int val = -1;
+
+        while (!(std::cin >> val))
+            std::cout << "Only integer type in ParaCL\n";
+
+        dynamic_cast<identifier*>(child_)->set_value(val);
+    }
 };
 
-template<> class para_operator<op_type::GR> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "gr op\n"; }
+//----------------------------------------------------------------------
+template<op_type type>
+struct calc_d_op final : public i_calculatable, public two_child { };
+
+template<>
+struct calc_d_op<op_type::ADD> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::GRE> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "gre op\n"; }
+template<>
+struct calc_d_op<op_type::SUB> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::BL> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "bl op\n"; }
+template<>
+struct calc_d_op<op_type::MUL> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::BLE> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "ble op\n"; }
+template<>
+struct calc_d_op<op_type::DIV> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::EQ> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "gr op\n"; }
+template<>
+struct calc_d_op<op_type::GR> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::SCAN> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "scan op\n"; }
+template<>
+struct calc_d_op<op_type::GRE> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::ASSIG> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "assig op\n"; }
+template<>
+struct calc_d_op<op_type::BL> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::IF> final : public op_base {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "if op\n"; }
+template<>
+struct calc_d_op<op_type::BLE> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
-template<> class para_operator<op_type::WHILE> final : public op_base  {
-public:
-    para_operator(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : op_base(l, r, type) {}
-    void execute() const override { std::cout << "while op\n"; }
-};
-
-
-//---------------------------rule of zero---------------------------
-class node_manager {
-protected:
-    std::vector<std::unique_ptr<i_node>> node_container_;
-
-protected:
-    node_manager()  = default;
-    ~node_manager() = default;
-
-    node_manager            (const node_manager&) = delete;
-    node_manager& operator= (const node_manager&) = delete;
-    node_manager            (node_manager&&) = delete;
-    node_manager& operator= (node_manager&&) = delete;
+template<>
+struct calc_d_op<op_type::EQ> final : public i_calculatable, public two_child {
+    calc_d_op(i_node *l = nullptr, i_node *r = nullptr, op_type type = op_type::ERROR) : i_node(), i_calculatable(), two_child(l, r, type) {}
+    int calc() const override { std::cout << "op ass\n"; }
 };
 
 } /*namespace detail*/

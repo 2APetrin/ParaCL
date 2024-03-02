@@ -1,40 +1,98 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <vector>
-#include <memory>
 #include "node.hpp"
+#include <cstring>
+#include <memory>
 
 namespace para_tree {
 
+namespace detail {
+
+//---------------------------rule of zero---------------------------
+class node_manager {
+protected:
+    std::vector<std::unique_ptr<i_node>> node_container_;
+
+protected:
+    node_manager()  = default;
+    ~node_manager() = default;
+
+    node_manager            (const node_manager&) = delete;
+    node_manager& operator= (const node_manager&) = delete;
+    node_manager            (node_manager&&) = delete;
+    node_manager& operator= (node_manager&&) = delete;
+};
+
+} /*namespace detail*/
+
 static int img_count = 0;
 
+//-------------------------------ast_tree-------------------------------
 class ast_tree final : private detail::node_manager {
     using node_ptr = detail::i_node*;
-
     using detail::node_manager::node_container_;
-    node_ptr root_;
+
+    detail::scope* root_;
 
 public:
     ast_tree() = default;
 
 //---------------------------------------------------------------------
+    /**make executable double child operator*/
     template <op_type type>
-    node_ptr make_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        detail::para_operator<type>* node = new detail::para_operator<type>{l, r, type};
+    detail::exec_d_op<type>* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+        detail::exec_d_op<type>* node = new detail::exec_d_op<type>{l, r, type};
+
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
 
         std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
 
         node_container_.push_back(std::move(push));
 
-        return node_container_.back().get();
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::exec_d_op<type>*>(last_inode);
+
+        return ret;
     }
 
 //---------------------------------------------------------------------
-    node_ptr make_number(int val) {
+    /**make executable single child operator*/
+    template <op_type type>
+    detail::exec_s_op<type>* make_es_op(node_ptr chld = nullptr) {
+        detail::exec_s_op<type>* node = new detail::exec_s_op<type>{chld, type};
+
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::exec_s_op<type>*>(last_inode);
+
+        return ret;
+    }
+
+//---------------------------------------------------------------------
+    /**make calculatable double child operator*/
+    template <op_type type>
+    detail::calc_d_op<type>* make_cd_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+        detail::calc_d_op<type>* node = new detail::calc_d_op<type>{l, r, type};
+
+        node_ptr base_node_ptr = static_cast<node_ptr>(node);
+
+        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
+
+        node_container_.push_back(std::move(push));
+
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::calc_d_op<type>*>(last_inode);
+
+        return ret;
+    }
+
+//---------------------------------------------------------------------
+    detail::number* make_number(int val) {
         detail::number* node = new detail::number{val};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -42,11 +100,14 @@ public:
 
         node_container_.push_back(std::move(push));
 
-        return node_container_.back().get();
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::number*>(last_inode);
+
+        return ret;
     }
 
 //---------------------------------------------------------------------
-    node_ptr make_identifier(std::string str, detail::scope* scp = nullptr) {
+    detail::identifier* make_identifier(std::string str, detail::scope* scp = nullptr) {
         detail::identifier* node = new detail::identifier{str, scp};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -54,11 +115,14 @@ public:
 
         node_container_.push_back(std::move(push));
 
-        return node_container_.back().get();
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::identifier*>(last_inode);
+
+        return ret;
     }
 
 //---------------------------------------------------------------------
-    node_ptr make_scope(detail::scope* parent_scope = nullptr) {
+    detail::scope* make_scope(detail::scope* parent_scope = nullptr) {
         detail::scope* node = new detail::scope{parent_scope};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -66,19 +130,21 @@ public:
 
         node_container_.push_back(std::move(push));
 
-        return node_container_.back().get();
+        auto last_inode = node_container_.back().get();
+        auto ret = dynamic_cast<detail::scope*>(last_inode);
+
+        return ret;
     }
 
 //---------------------------------------------------------------------
-//    int execute_tree() const { }
+    int execute_tree() const              { root_->execute(); }
+    void set_root(detail::scope* newroot) { root_ = newroot;  }
 
 //----------------------------------GRAPHVIZ----------------------------------
-    void set_root(node_ptr newroot) { root_ = newroot; }
-
     void dump_cont() const {
         std::cout << "CONTAINER DUMP\n";
         for (auto i = node_container_.begin(), e = node_container_.end(); i != e; ++i) {
-            (*i)->execute();
+            (*i)->dump();
             std::cout << " " << *i << "\n";
         }
     }
@@ -122,4 +188,4 @@ private:
     }
 };
 
-} /*namespace para tree*/
+} /*namespace para_tree*/
