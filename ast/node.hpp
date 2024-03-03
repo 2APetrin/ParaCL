@@ -1,7 +1,7 @@
 #pragma once
 
 #include "op_type.hpp"
-#include "  symtab.hpp"
+#include "symtab.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>

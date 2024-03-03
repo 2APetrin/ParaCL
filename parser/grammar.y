@@ -17,6 +17,9 @@
     #include <string>
     #include "tree.hpp"
 
+    namespace ptd = para_tree::detail;
+    using ptop = para_tree::op_type;
+
     namespace yy { class NumDriver; } // forward decl of argument to parser
 
 }
@@ -33,8 +36,7 @@
 
 %code
 {
-    using ptd  = para_tree::detail;
-    using ptop = para_tree::op_type;
+    
 }
 
 
@@ -115,8 +117,7 @@ assig: ID ASSIG expr SCOLON {
     if (!id_scope) tmp = driver->tree.make_identifier($1, id_scope);
     else           tmp = driver->tree.make_identifier($1, driver->curr_scope_);
 
-    $$ = static_cast<ptd::i_executable*>(
-        driver->tree.make_ed_op<ptop::ASSIG>(tmp, static_cast<ptd::i_node*>($3)));
+    $$ = driver->tree.make_ed_op<ptop::ASSIG>(tmp, static_cast<ptd::i_node>($3));
 }
 ;
 
@@ -129,13 +130,13 @@ expr: L { $$ = $1; /*$$->dump();*/ } /* GR  L { std::cout << "L > L"    << std::
 ;
 
 L: T Lsh {
-    if ($2) { static_cast<ptd::two_child*>($2)->setl($1); $$ = $2; }
-    else    { $$ = $1; }
+    if ($2) { $2->setl($1); $$ = $2; }
+    else                  { $$ = $1; }
 }
 ;
 
 Lsh: ADD T Lsh {
-    ptd::two_child* tmp1 = static_cast<ptd::two_child*>(driver->tree.make_cd_op<ptop::ADD>());
+    ptd::two_child* tmp1 = driver->make_cd_op<ptop::ADD>();
 
     if ($3) {
         ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);

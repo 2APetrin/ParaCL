@@ -38,103 +38,47 @@ public:
     ast_tree() = default;
 
 //---------------------------------------------------------------------
-    /**make executable double child operator*/
+    /**make two children operator*/
     template <op_type type>
-    detail::two_child* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        detail::exec_d_op<type>* node = new detail::exec_d_op<type>{l, r, type};
+    detail::i_two_child* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+        node_ptr node = create_unique_push_get_ptr(new detail::exec_d_op<type>{l, r, type});
 
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::exec_d_op<type>*>(last_inode);
-
-        return ret;
+        return static_cast<i_two_child*>(node);
     }
 
 //---------------------------------------------------------------------
-    /**make executable single child operator*/
+    /**make single child operator*/
     template <op_type type>
-    detail::single_child* make_es_op(node_ptr chld = nullptr) {
-        detail::exec_s_op<type>* node = new detail::exec_s_op<type>{chld, type};
+    detail::i_one_child* make_es_op(node_ptr chld = nullptr) {
+        node_ptr node = create_unique_push_get_ptr(new detail::exec_s_op<type>{chld, type});
 
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::exec_s_op<type>*>(last_inode);
-
-        return ret;
-    }
-
-//---------------------------------------------------------------------
-    /**make calculatable double child operator*/
-    template <op_type type>
-    detail::two_child* make_cd_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        detail::calc_d_op<type>* node = new detail::calc_d_op<type>{l, r, type};
-
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::calc_d_op<type>*>(last_inode);
-
-        return ret;
+        return static_cast<i_one_child*>(node);
     }
 
 //---------------------------------------------------------------------
     detail::i_node* make_number(int val) {
-        detail::number* node = new detail::number{val};
-
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::number*>(last_inode);
-
-        return ret;
+        return create_unique_push_get_ptr(new detail::number{val});
     }
 
 //---------------------------------------------------------------------
     detail::i_node* make_identifier(std::string str, detail::scope* scp = nullptr) {
-        detail::identifier* node = new detail::identifier{str, scp};
-
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::identifier*>(last_inode);
-
-        return ret;
+        return create_unique_push_get_ptr(new detail::identifier{str, scp});
     }
 
 //---------------------------------------------------------------------
     detail::i_node* make_scope(detail::scope* parent_scope = nullptr) {
-        detail::scope* node = new detail::scope{parent_scope};
-
-        node_ptr base_node_ptr = static_cast<node_ptr>(node);
-        std::unique_ptr<detail::i_node> push = std::unique_ptr<detail::i_node>{base_node_ptr};
-
-        node_container_.push_back(std::move(push));
-
-        auto last_inode = node_container_.back().get();
-        auto ret = dynamic_cast<detail::scope*>(last_inode);
-
-        return ret;
+        return create_unique_push_get_ptr(new detail::scope{parent_scope});        
     }
+
+private:
+    node_ptr create_unique_push_get_ptr(node_ptr node) {
+        node_container_.push_back(std::move(std::unique_ptr<detail::i_node>{node}));
+
+        return node_container_.back().get();
+    }
+
+
+public:
 
 //---------------------------------------------------------------------
     int execute_tree() const              { root_->execute(); }
