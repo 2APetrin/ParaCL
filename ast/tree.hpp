@@ -70,6 +70,10 @@ public:
         return create_unique_push_get_ptr(new detail::scope{parent_scope});        
     }
 
+    node_ptr make_scan() {
+        return create_unique_push_get_ptr(new detail::scan{});
+    }
+
 private:
     node_ptr create_unique_push_get_ptr(node_ptr node) {
         node_container_.push_back(std::move(std::unique_ptr<detail::i_node>{node}));

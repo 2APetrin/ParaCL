@@ -4,7 +4,7 @@
 %defines
 %define api.token.constructor
 %define api.value.type variant
-%param {yy::NumDriver* driver} //may be ref? I'll try later
+%param {yy::NumDriver* driver}
 
 %locations
 %define parse.trace
@@ -20,7 +20,7 @@
     namespace ptd = para_tree::detail;
     using ptop = para_tree::op_type;
 
-    namespace yy { class NumDriver; } // forward decl of argument to parser
+    namespace yy { class NumDriver; }
 
 }
 
@@ -33,12 +33,6 @@
 
     YY_DECL;
 }
-
-%code
-{
-    
-}
-
 
 %token
     ADD    "+"
@@ -77,13 +71,16 @@
 
 // non terminal
 %nterm <ptd::i_node*> scope
-%nterm <ptd::two_child*> assig
-%nterm <ptd::two_child*> op
-%nterm <ptd::two_child*> expr
-%nterm <ptd::two_child*> L
-%nterm <ptd::two_child*> Lsh
-%nterm <ptd::two_child*> T
-%nterm <ptd::two_child*> Tsh
+%nterm <ptd::i_two_child*> assig
+%nterm <ptd::i_two_child*> if
+%nterm <ptd::i_two_child*> while
+%nterm <ptd::i_two_child*> func
+%nterm <ptd::i_two_child*> op
+%nterm <ptd::i_two_child*> expr
+%nterm <ptd::i_two_child*> L
+%nterm <ptd::i_two_child*> Lsh
+%nterm <ptd::i_two_child*> T
+%nterm <ptd::i_two_child*> Tsh
 %nterm <ptd::i_node*> P
 
 
@@ -91,7 +88,7 @@
 
 %%
 
-program: scope { /*driver->tree.execute_tree()*/ driver->curr_scope_->dump(); driver->tree.set_root(driver->curr_scope_); driver->tree.graphviz_dump(); }
+program: scope { /*driver->tree.execute_tree()*/ driver->tree.graphviz_dump(); }
 ;
 
 scope: op scopesh { driver->curr_scope_->add_child($1); }
@@ -101,15 +98,17 @@ scopesh: op scopesh { driver->curr_scope_->add_child($1); }
       | %empty
 ;
 
-op: assig         { $$ = $1; /*$$->dump();*/ }
-  /* | while         { std::cout << "op while"    << std::endl; }
-  | if            { std::cout << "op if"       << std::endl; }
-  | func          { std::cout << "op func"     << std::endl; }
-  | SLB scope SRB { std::cout << "op { comp }" << std::endl; } */
+op: assig         { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
+  | while         { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
+  | if            { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
+  | func          { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
+  | SLB scope SRB { 
+        std::cout << "op { comp }" << std::endl; 
+    }
 ;
 
 assig: ID ASSIG expr SCOLON {
-    std::cout << "assig: id_name = " << $1 << std::endl;
+    //std::cout << "assig: id_name = " << $1 << std::endl;
 
     ptd::i_node* tmp = nullptr;
     ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
@@ -121,12 +120,12 @@ assig: ID ASSIG expr SCOLON {
 }
 ;
 
-expr: L { $$ = $1; /*$$->dump();*/ } /* GR  L { std::cout << "L > L"    << std::endl; }
-    | L GRE L { std::cout << "L >= L"   << std::endl; }
-    | L BL  L { std::cout << "L < L"    << std::endl; }
-    | L BLE L { std::cout << "L <= L"   << std::endl; }
-    | L EQ  L { std::cout << "L == L"   << std::endl; }
-    | L       { std::cout << "L single" << std::endl; } */
+expr: L { $$ = $1; } 
+    | L GR  L { driver->process_two_child_logic<ptop::GR> ($$, $1, $3); }
+    | L GRE L { driver->process_two_child_logic<ptop::GRE>($$, $1, $3); }
+    | L BL  L { driver->process_two_child_logic<ptop::BL> ($$, $1, $3); }
+    | L BLE L { driver->process_two_child_logic<ptop::BLE>($$, $1, $3); }
+    | L EQ  L { driver->process_two_child_logic<ptop::EQ> ($$, $1, $3); }
 ;
 
 L: T Lsh {
@@ -135,102 +134,46 @@ L: T Lsh {
 }
 ;
 
-Lsh: ADD T Lsh {
-    ptd::two_child* tmp1 = driver->make_cd_op<ptop::ADD>();
-
-    if ($3) {
-        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
-        tmp2->setl($2);
-        tmp1->setr($3);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-    else {
-        tmp1->setr($2);
-        $$ = static_cast<ptd::i_node*>(tmp1); 
-    }
-}
-   | SUB T Lsh {
-    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::SUB>());
-
-    if ($3) {
-        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
-        tmp2->setl($2);
-        tmp1->setr($3);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-    else {
-        tmp1->setr($2);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-}
+Lsh: ADD T Lsh { driver->process_two_child_arith<ptop::ADD>($$, $2, $3); }
+   | SUB T Lsh { driver->process_two_child_arith<ptop::SUB>($$, $2, $3); }
    | %empty
 ;
 
 T: P Tsh {
-    if ($2) { static_cast<ptd::op_base*>($2)->setl($1); $$ = $2; }
-    else    { $$ = $1; }
+    if ($2) { $2->setl($1); $$ = $2; }
+    else                  { $$ = $1; }
 }
 ;
 
-Tsh: MUL P Tsh {
-    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::MUL>());
-
-    if ($3) {
-        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
-        tmp2->setl($2);
-        tmp1->setr($3);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-    else {
-        tmp1->setr($2);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-}
-   | DIV P Tsh {
-    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::DIV>());
-
-    if ($3) {
-        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
-        tmp2->setl($2);
-        tmp1->setr($3);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-    else {
-        tmp1->setr($2);
-        $$ = static_cast<ptd::i_node*>(tmp1);
-    }
-}
+Tsh: MUL P Tsh { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
+   | DIV P Tsh { driver->process_two_child_arith<ptop::DIV>($$, $2, $3); }
    | %empty
 ;
 
-P: /* KLB expr KRB { $$ = $2; }| */ 
-    ID
+P: KLB expr KRB { $$ = $2; }
+| ID {
+    std::cout << "id: id_name = " << $1 << std::endl;
 
-    {
-        std::cout << "id: id_name = " << $1 << std::endl;
-
-
-        if (!driver->curr_scope_->is_visible($1)) {
-            std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
-            $$ = driver->tree.make_identifier("UNDEFIND");
-        }
-
-        else {
-            $$ = driver->tree.make_identifier($1, driver->curr_scope_);
-        }
+    if (!driver->curr_scope_->is_visible($1)) {
+        std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
+        $$ = driver->tree.make_identifier("UNDEFIND");
     }
- | NUMBER          { $$ = static_cast<ptd::i_node*>(driver->tree.make_number($1)); }
- /* | SCAN         { $$ = $1; } */
+
+    else 
+        $$ = driver->tree.make_identifier($1, driver->curr_scope_);
+}
+ | NUMBER   { $$ = driver->tree.make_number($1); }
+ | SCAN     { $$ = driver->tree.make_scan(); } 
 ;
 
-/* if: IF KLB expr KRB op { std::cout << "if rule" << std::endl; }
+if: IF KLB expr KRB op { $$ = make_d_op<ptop::IF>($3, $5); }
 ;
 
-while: WHILE KLB expr KRB op { std::cout << "while rule" << std::endl; }
+while: WHILE KLB expr KRB op { $$ = make_d_op<ptop::WHILE>($3, $5); }
 ;
 
-func: FUNC KLB expr KRB SCOLON { std::cout << "func rule" << std::endl; }
-; */
+func: FUNC KLB expr KRB SCOLON { $$ = make_s_op<ptop::PRINT>($3); }
+; 
 
 %%
 

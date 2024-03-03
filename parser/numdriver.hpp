@@ -17,16 +17,18 @@ public:
     para_tree::ast_tree tree;
     para_tree::detail::scope* curr_scope_ = nullptr;
 
-    NumDriver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope()) {}
-
-    template <ptop type>
-    ptd::i_two_child* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        return tree.make_ed_op(l, r);
+    NumDriver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope()) {
+        tree.set_root(curr_scope);
     }
 
     template <ptop type>
-    ptd::i_one_child* make_es_op(node_ptr chld = nullptr) {
-        return tree.make_es_op(chld);
+    ptd::i_two_child* make_d_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+        return tree.make_ed_op<type>(l, r);
+    }
+
+    template <ptop type>
+    ptd::i_one_child* make_s_op(node_ptr chld = nullptr) {
+        return tree.make_es_op<type>(chld);
     }
 
     ptd::i_node* make_number(int val) {
@@ -38,7 +40,29 @@ public:
     }
 
     ptd::i_node* make_scope(ptd::scope* parent_scope = nullptr) {
-        return tree.make_scope(parent_scope);   
+        return tree.make_scope(parent_scope);
+    }
+
+    ptd::i_node* make_scan() { return tree.make_scan(); }
+
+    template <ptop type>
+    void process_two_child_arith(ptd::i_two_child* &ret, ptd::i_two_child* left,
+                                 ptd::i_two_child* right = nullptr) {
+        ret = make_d_op<type>();
+
+        if (right) {
+            right->setl(left);
+            ret->setr(right);
+        }
+        else ret->setr(left);
+    }
+
+    template <ptop type>
+    void process_two_child_logic(ptd::i_two_child* &ret, ptd::i_two_child* left,
+                                 ptd::i_two_child* right = nullptr) {
+        ret = make_d_op<type>();
+        ret->setl(left);
+        ret->setr(right);
     }
 
     bool parse() {
