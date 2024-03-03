@@ -1,7 +1,7 @@
 #pragma once
 
 #include "op_type.hpp"
-#include "symtab.hpp"
+#include "../symtab/symtab.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -34,7 +34,7 @@ class number final : public i_calculatable {
     int val_;
 
 public:
-    number(int val) : val_(val) {}
+    number(int val) : i_node(), i_calculatable(), val_(val) {}
 
     int calc() const override { return val_; }
 
@@ -56,13 +56,16 @@ class scope final : public i_executable {
     scope* parent_scope_;
 
 public:
-    scope(scope* scope = nullptr) : parent_scope_(scope) {}
+    scope(scope* scope = nullptr) : i_node(), i_executable(), parent_scope_(scope) {}
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         std::cout << "{\n";
 
-        for (auto && i : children_) i->dump();
+        for (auto && i : children_) {
+            std::cout << i << std::endl;
+            i->dump();
+        }
 
         std::cout << "}\n\n";
     }
@@ -73,15 +76,19 @@ public:
         for (auto && i : children_) {
             std::cout << "label1\n";
             i->graphviz_dump(out);
-            out << "    node_" << this << "->node_" << &*i << " [color = \"#293133\"];\n";
+            out << "    node_" << this << "->node_" << i << " [color = \"#293133\"];\n";
         }
     }
 
-    void add_child(const i_executable* chld) { children_.push_back(chld); }
+    void add_child(const i_executable* chld) { std::cout << chld << std::endl; children_.push_back(chld); }
 
     void execute() const override {
         std::cout << "scope execution\n";
         for (auto && i : children_) { i->execute(); }
+    }
+
+    void dump_cont() {
+        for (auto && i : children_) { std::cout << i << std::endl; }
     }
 
     //---------------------work with symtab-----------------------
@@ -142,12 +149,13 @@ public:
     }
 
     void graphviz_dump(std::ofstream& out) const override {
-        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
+        auto ptr = dynamic_cast<detail::i_node*>(const_cast<two_child*>(this));
+        out << "    node_" << ptr << "[shape = Mrecord, label = \"{{" << ptr << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
 
         l_->graphviz_dump(out);
         r_->graphviz_dump(out);
-        out << "    node_" << this << "->node_" << l_ << " [color = \"#293133\"];\n";
-        out << "    node_" << this << "->node_" << r_ << " [color = \"#293133\"];\n";
+        out << "    node_" << ptr << "->node_" << l_ << " [color = \"#293133\"];\n";
+        out << "    node_" << ptr << "->node_" << r_ << " [color = \"#293133\"];\n";
     }
 
     void setl(i_node *newl) { l_ = newl; }
@@ -167,10 +175,11 @@ public:
     }
 
     void graphviz_dump(std::ofstream& out) const override {
-        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
+        auto ptr = dynamic_cast<detail::i_node*>(const_cast<single_child*>(this));
+        out << "    node_" << ptr << "[shape = Mrecord, label = \"{{" << ptr << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
 
         child_->graphviz_dump(out);
-        out << "    node_" << this << "->node_" << child_ << " [color = \"#293133\"];\n";
+        out << "    node_" << ptr << "->node_" << child_ << " [color = \"#293133\"];\n";
     }
 
     void set_child(i_node *newc) { child_ = newc; }
