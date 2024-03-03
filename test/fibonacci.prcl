@@ -1,0 +1,21 @@
+fib_num = ?;
+
+if (fib_num <  1) print(-1);
+if (fib_num == 1) print( 1);
+if (fib_num == 2) print( 1);
+
+if (fib_num > 2) {
+    curr_num = 2;
+
+    a = 1;
+    b = 1;
+
+    while (fib_num - curr_num) {
+        num = a + b;
+        a = b;
+        b = num;
+        curr_num = curr_num + 1;
+    }
+
+    print(b);
+}

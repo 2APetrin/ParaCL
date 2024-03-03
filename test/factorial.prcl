@@ -1,0 +1,14 @@
+fact_num = ?;
+
+if (fact_num <  0) print(-1);
+if (fact_num == 0) print( 1);
+
+if (fact_num > 0) {
+    a = 1;
+    while (fact_num) {
+        a = a * fact_num;
+        fact_num = fact_num - 1;
+    }
+
+    print(a);
+}
