@@ -39,34 +39,34 @@ public:
 
 //---------------------------------------------------------------------
     /**make two children operator*/
-    template <op_type type>
-    detail::i_two_child* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        node_ptr node = create_unique_push_get_ptr(new detail::exec_d_op<type>{l, r, type});
+    template <op_type T>
+    detail::i_two_child* make_d_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+        node_ptr node = create_unique_push_get_ptr(new detail::two_child_op<T>{l, r});
 
-        return static_cast<i_two_child*>(node);
+        return static_cast<detail::i_two_child*>(node);
     }
 
 //---------------------------------------------------------------------
     /**make single child operator*/
-    template <op_type type>
-    detail::i_one_child* make_es_op(node_ptr chld = nullptr) {
-        node_ptr node = create_unique_push_get_ptr(new detail::exec_s_op<type>{chld, type});
+    template <op_type T>
+    detail::i_one_child* make_s_op(node_ptr chld = nullptr) {
+        node_ptr node = create_unique_push_get_ptr(new detail::one_child_op<T>{chld});
 
-        return static_cast<i_one_child*>(node);
+        return static_cast<detail::i_one_child*>(node);
     }
 
 //---------------------------------------------------------------------
-    detail::i_node* make_number(int val) {
+    node_ptr make_number(int val) {
         return create_unique_push_get_ptr(new detail::number{val});
     }
 
 //---------------------------------------------------------------------
-    detail::i_node* make_identifier(std::string str, detail::scope* scp = nullptr) {
+    node_ptr make_identifier(std::string str, detail::scope* scp = nullptr) {
         return create_unique_push_get_ptr(new detail::identifier{str, scp});
     }
 
 //---------------------------------------------------------------------
-    detail::i_node* make_scope(detail::scope* parent_scope = nullptr) {
+    node_ptr make_scope(detail::scope* parent_scope = nullptr) {
         return create_unique_push_get_ptr(new detail::scope{parent_scope});        
     }
 
@@ -81,8 +81,8 @@ private:
 public:
 
 //---------------------------------------------------------------------
-    int execute_tree() const              { root_->execute(); }
-    void set_root(detail::scope* newroot) { root_ = newroot;  }
+    int execute_tree() const              { return root_->execute(); }
+    void set_root(detail::scope* newroot) { root_ = newroot;         }
 
 //----------------------------------GRAPHVIZ----------------------------------
     void dump_cont() const {

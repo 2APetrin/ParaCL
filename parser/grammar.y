@@ -206,7 +206,7 @@ Tsh: MUL P Tsh {
 P: /* KLB expr KRB { $$ = $2; }| */ 
     ID
 
-    { 
+    {
         std::cout << "id: id_name = " << $1 << std::endl;
 
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "op_type.hpp"
-#include "symtab.hpp"
+#include "../symtab/symtab.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -117,6 +117,7 @@ public:
 
 //----------------------------------------------------------------------
 struct i_one_child : public i_node {
+protected:
     i_node *child_;
     op_type type_;
 
@@ -140,6 +141,7 @@ public:
 
 //----------------------------------------------------------------------
 struct i_two_child : public i_node {
+protected:
     i_node *l_, *r_;
     op_type type_;
 
@@ -165,7 +167,7 @@ public:
     void setr(i_node *newr) { r_ = newr; }
 };
 
-class scan final : public i_node {
+struct scan final : public i_node {
     scan() = default;
 
     int execute() const override {
@@ -179,10 +181,10 @@ class scan final : public i_node {
 
 //----------------------------------------------------------------------
 template <op_type T>
-class one_child_op final : public i_one_child { };
+struct one_child_op final : public i_one_child { };
 
 template<>
-class one_child_op<op_type::PRINT> final : public i_one_child {
+struct one_child_op<op_type::PRINT> final : public i_one_child {
     one_child_op(i_node *child = nullptr) : i_one_child(child, op_type::PRINT) {}
 
     int execute() const override {
@@ -193,10 +195,10 @@ class one_child_op<op_type::PRINT> final : public i_one_child {
 
 //----------------------------------------------------------------------
 template <op_type T>
-class two_child_op final : public i_two_child { };
+struct two_child_op final : public i_two_child { };
 
 template<>
-class two_child_op<op_type::ADD> final : public i_two_child {
+struct two_child_op<op_type::ADD> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::ADD) {}
 
     int execute() const override {
@@ -208,7 +210,7 @@ class two_child_op<op_type::ADD> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::SUB> final : public i_two_child {
+struct two_child_op<op_type::SUB> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::SUB) {}
 
     int execute() const override {
@@ -220,7 +222,7 @@ class two_child_op<op_type::SUB> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::MUL> final : public i_two_child {
+struct two_child_op<op_type::MUL> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::MUL) {}
 
     int execute() const override {
@@ -232,7 +234,7 @@ class two_child_op<op_type::MUL> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::DIV> final : public i_two_child {
+struct two_child_op<op_type::DIV> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::DIV) {}
 
     int execute() const override {
@@ -246,7 +248,7 @@ class two_child_op<op_type::DIV> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::GR> final : public i_two_child {
+struct two_child_op<op_type::GR> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::GR) {}
 
     int execute() const override {
@@ -258,7 +260,7 @@ class two_child_op<op_type::GR> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::GRE> final : public i_two_child {
+struct two_child_op<op_type::GRE> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::GRE) {}
 
     int execute() const override {
@@ -270,7 +272,7 @@ class two_child_op<op_type::GRE> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::BL> final : public i_two_child {
+struct two_child_op<op_type::BL> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::BL) {}
 
     int execute() const override {
@@ -282,7 +284,7 @@ class two_child_op<op_type::BL> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::BLE> final : public i_two_child {
+struct two_child_op<op_type::BLE> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::BLE) {}
 
     int execute() const override {
@@ -294,7 +296,7 @@ class two_child_op<op_type::BLE> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::EQ> final : public i_two_child {
+struct two_child_op<op_type::EQ> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::EQ) {}
 
     int execute() const override {
@@ -306,7 +308,7 @@ class two_child_op<op_type::EQ> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::ASSIG> final : public i_two_child {
+struct two_child_op<op_type::ASSIG> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::ASSIG) {}
 
     int execute() const override {
@@ -318,7 +320,7 @@ class two_child_op<op_type::ASSIG> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::IF> final : public i_two_child {
+struct two_child_op<op_type::IF> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::IF) {}
 
     int execute() const override {
@@ -330,7 +332,7 @@ class two_child_op<op_type::IF> final : public i_two_child {
 };
 
 template<>
-class two_child_op<op_type::WHILE> final : public i_two_child {
+struct two_child_op<op_type::WHILE> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::WHILE) {}
 
     int execute() const override {
