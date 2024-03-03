@@ -33,7 +33,8 @@
 
 %code
 {
-
+    using ptd  = para_tree::detail;
+    using ptop = para_tree::op_type;
 }
 
 
@@ -73,15 +74,15 @@
 
 
 // non terminal
-%nterm <para_tree::detail::i_node*> scope
-%nterm <para_tree::detail::i_node*> assig
-%nterm <para_tree::detail::i_node*> op
-%nterm <para_tree::detail::i_node*> expr
-%nterm <para_tree::detail::i_node*> L
-%nterm <para_tree::detail::i_node*> Lsh
-%nterm <para_tree::detail::i_node*> T
-%nterm <para_tree::detail::i_node*> Tsh
-%nterm <para_tree::detail::i_node*> P
+%nterm <ptd::i_node*> scope
+%nterm <ptd::two_child*> assig
+%nterm <ptd::two_child*> op
+%nterm <ptd::two_child*> expr
+%nterm <ptd::two_child*> L
+%nterm <ptd::two_child*> Lsh
+%nterm <ptd::two_child*> T
+%nterm <ptd::two_child*> Tsh
+%nterm <ptd::i_node*> P
 
 
 %start program
@@ -108,13 +109,14 @@ op: assig         { $$ = $1; /*$$->dump();*/ }
 assig: ID ASSIG expr SCOLON {
     std::cout << "assig: id_name = " << $1 << std::endl;
 
-    para_tree::detail::i_node* tmp = nullptr;
-    para_tree::detail::scope* id_scope = driver->curr_scope_->is_visible($1);
+    ptd::i_node* tmp = nullptr;
+    ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
 
     if (!id_scope) tmp = driver->tree.make_identifier($1, id_scope);
     else           tmp = driver->tree.make_identifier($1, driver->curr_scope_);
 
-    $$ = driver->tree.make_op<para_tree::op_type::ASSIG>(tmp, $3);
+    $$ = static_cast<ptd::i_executable*>(
+        driver->tree.make_ed_op<ptop::ASSIG>(tmp, static_cast<ptd::i_node*>($3)));
 }
 ;
 
@@ -127,74 +129,74 @@ expr: L { $$ = $1; /*$$->dump();*/ } /* GR  L { std::cout << "L > L"    << std::
 ;
 
 L: T Lsh {
-    if ($2) { static_cast<para_tree::detail::op_base*>($2)->setl($1); $$ = $2; }
+    if ($2) { static_cast<ptd::two_child*>($2)->setl($1); $$ = $2; }
     else    { $$ = $1; }
 }
 ;
 
 Lsh: ADD T Lsh {
-    para_tree::detail::op_base* tmp1 = static_cast<para_tree::detail::op_base*>(driver->tree.make_op<para_tree::op_type::ADD>());
+    ptd::two_child* tmp1 = static_cast<ptd::two_child*>(driver->tree.make_cd_op<ptop::ADD>());
 
     if ($3) {
-        para_tree::detail::op_base* tmp2 = static_cast<para_tree::detail::op_base*>($3);
+        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
         tmp2->setl($2);
         tmp1->setr($3);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
     else {
         tmp1->setr($2);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1); 
     }
 }
    | SUB T Lsh {
-    para_tree::detail::op_base* tmp1 = static_cast<para_tree::detail::op_base*>(driver->tree.make_op<para_tree::op_type::SUB>());
+    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::SUB>());
 
     if ($3) {
-        para_tree::detail::op_base* tmp2 = static_cast<para_tree::detail::op_base*>($3);
+        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
         tmp2->setl($2);
         tmp1->setr($3);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
     else {
         tmp1->setr($2);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
 }
    | %empty
 ;
 
 T: P Tsh {
-    if ($2) { static_cast<para_tree::detail::op_base*>($2)->setl($1); $$ = $2; }
+    if ($2) { static_cast<ptd::op_base*>($2)->setl($1); $$ = $2; }
     else    { $$ = $1; }
 }
 ;
 
 Tsh: MUL P Tsh {
-    para_tree::detail::op_base* tmp1 = static_cast<para_tree::detail::op_base*>(driver->tree.make_op<para_tree::op_type::MUL>());
+    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::MUL>());
 
     if ($3) {
-        para_tree::detail::op_base* tmp2 = static_cast<para_tree::detail::op_base*>($3);
+        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
         tmp2->setl($2);
         tmp1->setr($3);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
     else {
         tmp1->setr($2);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
 }
    | DIV P Tsh {
-    para_tree::detail::op_base* tmp1 = static_cast<para_tree::detail::op_base*>(driver->tree.make_op<para_tree::op_type::DIV>());
+    ptd::op_base* tmp1 = static_cast<ptd::op_base*>(driver->tree.make_op<ptop::DIV>());
 
     if ($3) {
-        para_tree::detail::op_base* tmp2 = static_cast<para_tree::detail::op_base*>($3);
+        ptd::op_base* tmp2 = static_cast<ptd::op_base*>($3);
         tmp2->setl($2);
         tmp1->setr($3);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
     else {
         tmp1->setr($2);
-        $$ = static_cast<para_tree::detail::i_node*>(tmp1);
+        $$ = static_cast<ptd::i_node*>(tmp1);
     }
 }
    | %empty
@@ -216,7 +218,7 @@ P: /* KLB expr KRB { $$ = $2; }| */
             $$ = driver->tree.make_identifier($1, driver->curr_scope_);
         }
     }
- | NUMBER          { $$ = static_cast<para_tree::detail::i_node*>(driver->tree.make_number($1)); }
+ | NUMBER          { $$ = static_cast<ptd::i_node*>(driver->tree.make_number($1)); }
  /* | SCAN         { $$ = $1; } */
 ;
 

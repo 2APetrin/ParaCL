@@ -40,7 +40,7 @@ public:
 //---------------------------------------------------------------------
     /**make executable double child operator*/
     template <op_type type>
-    detail::exec_d_op<type>* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+    detail::two_child* make_ed_op(node_ptr l = nullptr, node_ptr r = nullptr) {
         detail::exec_d_op<type>* node = new detail::exec_d_op<type>{l, r, type};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -58,7 +58,7 @@ public:
 //---------------------------------------------------------------------
     /**make executable single child operator*/
     template <op_type type>
-    detail::exec_s_op<type>* make_es_op(node_ptr chld = nullptr) {
+    detail::single_child* make_es_op(node_ptr chld = nullptr) {
         detail::exec_s_op<type>* node = new detail::exec_s_op<type>{chld, type};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -76,7 +76,7 @@ public:
 //---------------------------------------------------------------------
     /**make calculatable double child operator*/
     template <op_type type>
-    detail::calc_d_op<type>* make_cd_op(node_ptr l = nullptr, node_ptr r = nullptr) {
+    detail::two_child* make_cd_op(node_ptr l = nullptr, node_ptr r = nullptr) {
         detail::calc_d_op<type>* node = new detail::calc_d_op<type>{l, r, type};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -92,7 +92,7 @@ public:
     }
 
 //---------------------------------------------------------------------
-    detail::number* make_number(int val) {
+    detail::i_node* make_number(int val) {
         detail::number* node = new detail::number{val};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -107,7 +107,7 @@ public:
     }
 
 //---------------------------------------------------------------------
-    detail::identifier* make_identifier(std::string str, detail::scope* scp = nullptr) {
+    detail::i_node* make_identifier(std::string str, detail::scope* scp = nullptr) {
         detail::identifier* node = new detail::identifier{str, scp};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
@@ -122,7 +122,7 @@ public:
     }
 
 //---------------------------------------------------------------------
-    detail::scope* make_scope(detail::scope* parent_scope = nullptr) {
+    detail::i_node* make_scope(detail::scope* parent_scope = nullptr) {
         detail::scope* node = new detail::scope{parent_scope};
 
         node_ptr base_node_ptr = static_cast<node_ptr>(node);
