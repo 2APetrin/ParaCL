@@ -15,6 +15,7 @@ enum class op_type {
     EQ,
 
     SCAN,
+    PRINT,
     ASSIG,
 
     IF,

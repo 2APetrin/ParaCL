@@ -12,7 +12,6 @@ int main() {
 
     auto psh = dynamic_cast<para_tree::detail::i_executable*>(t3);
     t0->add_child(psh);
-    //t0->dump_cont();
 
     tree.set_root(t0);
 
@@ -26,4 +25,6 @@ int main() {
 
     tree.dump_cont();
     tree.graphviz_dump();
+
+    tree.execute_tree();
 }
