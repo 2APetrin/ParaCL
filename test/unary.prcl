@@ -1,0 +1,13 @@
+a = 6;
+
+b = +a;
+c = +6;
+print(b); print(c);
+
+d = -a;
+e = -6;
+print(d); print(e);
+
+f = - - a;
+g = - - - a;
+print(f); print(g);

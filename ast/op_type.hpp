@@ -13,6 +13,7 @@ enum class op_type {
     BL,
     BLE,
     EQ,
+    NEQ,
 
     SCAN,
     PRINT,
