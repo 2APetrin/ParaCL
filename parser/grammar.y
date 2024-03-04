@@ -74,16 +74,16 @@
 %nterm <ptd::i_node*> scope_br
 %nterm <ptd::i_two_child*> assig
 %nterm <ptd::i_two_child*> if
-%nterm <ptd::i_two_child*> if_start
+%nterm <ptd::i_node*> if_start
 %nterm <ptd::i_two_child*> while
-%nterm <ptd::i_two_child*> while_start
-%nterm <ptd::i_two_child*> func
+%nterm <ptd::i_node*> while_start
+%nterm <ptd::i_one_child*> lang_func
 %nterm <ptd::i_node*> op
-%nterm <ptd::i_two_child*> expr
-%nterm <ptd::i_two_child*> L
-%nterm <ptd::i_two_child*> Lsh
-%nterm <ptd::i_two_child*> T
-%nterm <ptd::i_two_child*> Tsh
+%nterm <ptd::i_node*> expr
+%nterm <ptd::i_node*> L
+%nterm <ptd::i_node*> Lsh
+%nterm <ptd::i_node*> T
+%nterm <ptd::i_node*> Tsh
 %nterm <ptd::i_node*> P
 
 
@@ -101,11 +101,11 @@ scopesh: op scopesh { driver->curr_scope_->add_child($1); }
       | %empty
 ;
 
-op: assig         { $$ = $1; curr_scope_->add_child($$); }
-  | while         { $$ = $1; curr_scope_->add_child($$); driver->reset_scope(); }
-  | if            { $$ = $1; curr_scope_->add_child($$); driver->reset_scope(); }
-  | func          { $$ = $1; curr_scope_->add_child($$); }
-  | scope_br      { $$ = $1  curr_scope_->add_child($$); }
+op: assig         { $$ = $1; driver->curr_scope_->add_child($$); }
+  | while         { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
+  | if            { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
+  | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
+  | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
 ;
 
 scope_br: open_br scope close_br { $$ = $2; }
@@ -121,10 +121,10 @@ assig: ID ASSIG expr SCOLON {
     ptd::i_node* tmp = nullptr;
     ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
 
-    if (!id_scope) tmp = driver->tree.make_identifier($1, id_scope);
-    else           tmp = driver->tree.make_identifier($1, driver->curr_scope_);
+    if (!id_scope) tmp = driver->make_identifier($1, id_scope);
+    else           tmp = driver->make_identifier($1, driver->curr_scope_);
 
-    $$ = driver->tree.make_ed_op<ptop::ASSIG>(tmp, static_cast<ptd::i_node>($3));
+    $$ = driver->make_d_op<ptop::ASSIG>(tmp, $3);
 }
 ;
 
@@ -137,8 +137,8 @@ expr: L { $$ = $1; }
 ;
 
 L: T Lsh {
-    if ($2) { $2->setl($1); $$ = $2; }
-    else                  { $$ = $1; }
+    if ($2) { static_cast<ptd::i_two_child*>($2)->setl($1); $$ = $2; }
+    else    { $$ = $1; }
 }
 ;
 
@@ -148,8 +148,8 @@ Lsh: ADD T Lsh { driver->process_two_child_arith<ptop::ADD>($$, $2, $3); }
 ;
 
 T: P Tsh {
-    if ($2) { $2->setl($1); $$ = $2; }
-    else                  { $$ = $1; }
+    if ($2) { static_cast<ptd::i_two_child*>($2)->setl($1); $$ = $2; }
+    else    { $$ = $1; }
 }
 ;
 
@@ -164,30 +164,30 @@ P: KLB expr KRB { $$ = $2; }
 
     if (!driver->curr_scope_->is_visible($1)) {
         std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
-        $$ = driver->tree.make_identifier("UNDEFIND");
+        $$ = driver->make_identifier("UNDEFIND");
     }
 
     else 
-        $$ = driver->tree.make_identifier($1, driver->curr_scope_);
+        $$ = driver->make_identifier($1, driver->curr_scope_);
 }
- | NUMBER   { $$ = driver->tree.make_number($1); }
- | SCAN     { $$ = driver->tree.make_scan(); } 
+ | NUMBER   { $$ = driver->make_number($1); }
+ | SCAN     { $$ = driver->make_scan(); } 
 ;
 
-if: if_start op { $$ = make_d_op<ptop::IF>($1, $2); }
+if: if_start op { $$ = driver->make_d_op<ptop::IF>($1, $2); }
 ;
 
 if_start: IF KLB expr KRB { driver->new_scope(); $$ = $3; }
 ;
 
-while: while_start op { $$ = make_d_op<ptop::WHILE>($1, $2); }
+while: while_start op { $$ = driver->make_d_op<ptop::WHILE>($1, $2); }
 ;
 
 while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; }
 ;
 
-func: FUNC KLB expr KRB SCOLON { $$ = make_s_op<ptop::PRINT>($3); }
-; 
+lang_func: FUNC KLB expr KRB SCOLON { $$ = driver->make_s_op<ptop::PRINT>($3); }
+;
 
 %%
 

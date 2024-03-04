@@ -60,9 +60,12 @@ public:
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {scope}}\", style = \"filled\", fillcolor = \"#9ACEEB\"];\n";
 
+        dump();
+
         for (auto && i : children_) {
             i->graphviz_dump(out);
             out << "    node_" << this << "->node_" << i << " [color = \"#293133\"];\n";
+            std::cout << i << std::endl;
         }
     }
 
@@ -113,8 +116,9 @@ public:
     }
 
     //----------------------scope and symtab part----------------------
-    int execute() const override { return scope_->get_value(name_); }
     void set_value(int value)    { scope_->set_value(name_, value); }
+    std::string get_name()       { return name_;                    }
+    int execute() const override { return scope_->get_value(name_); }
 };
 
 //----------------------------------------------------------------------
@@ -169,7 +173,10 @@ public:
     void setr(i_node *newr) { r_ = newr; }
 };
 
-struct scan final : public i_node {
+class scan final : public i_node {
+    i_node* scan_id_;
+
+public:
     scan() = default;
 
     int execute() const override {
@@ -178,6 +185,18 @@ struct scan final : public i_node {
             throw std::runtime_error{"Scan didn't scan integer type. Only integer type in ParaCL. Wait for ParaCL updates!!!\n"};
 
         return val;
+    }
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "scan_id_name=" << static_cast<identifier*>(scan_id_)->get_name() << std::endl;
+    }
+
+    void graphviz_dump(std::ofstream& out) const override {
+        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {scan}}\", style = \"filled\", fillcolor = \"#CDA4DE\"];\n";
+
+        scan_id_->graphviz_dump(out);
+        out << "    node_" << this << "->node_" << scan_id_ << " [color = \"#293133\"];\n";
     }
 };
 

@@ -50,23 +50,28 @@ public:
     ptd::i_node* make_scan() { return tree.make_scan(); }
 
     template <ptop type>
-    void process_two_child_arith(ptd::i_two_child* &ret, ptd::i_two_child* left,
-                                 ptd::i_two_child* right = nullptr) {
-        ret = make_d_op<type>();
+    void process_two_child_arith(ptd::i_node* &ret, ptd::i_node* left,
+                                 ptd::i_node* right = nullptr) {
+        auto ret_var = make_d_op<type>();
 
         if (right) {
-            right->setl(left);
-            ret->setr(right);
+            static_cast<ptd::i_two_child*>(right)->setl(left);
+            ret_var->setr(right);
         }
-        else ret->setr(left);
+        else ret_var->setr(left);
+
+        ret = ret_var;
     }
 
     template <ptop type>
-    void process_two_child_logic(ptd::i_two_child* &ret, ptd::i_two_child* left,
-                                 ptd::i_two_child* right = nullptr) {
-        ret = make_d_op<type>();
-        ret->setl(left);
-        ret->setr(right);
+    void process_two_child_logic(ptd::i_node* &ret, ptd::i_node* left,
+                                 ptd::i_node* right = nullptr) {
+        auto ret_var = make_d_op<type>();
+
+        ret_var->setl(left);
+        ret_var->setr(right);
+
+        ret = ret_var;
     }
 
     bool parse() {
