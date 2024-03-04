@@ -106,7 +106,7 @@ scopesh: op scopesh { }
       | %empty
 ;
 
-op: assig         { $$ = $1; driver->curr_scope_->add_child($$); }
+op: expr          { $$ = $1; driver->curr_scope_->add_child($$); }
   | while         { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); } 
   | if            { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); }
   | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
@@ -120,28 +120,26 @@ scope_br_start: SLB { driver->new_scope(); $$ = driver->curr_scope_; }
 close_br: SRB { driver->reset_scope(); }
 ;
 
-assig: ID ASSIG expr SCOLON {
-    //std::cout << "assig: id_name = " << $1 << std::endl;
-
-    ptd::i_node* tmp = nullptr;
-    ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
-
-    if (!id_scope) {
-        tmp = driver->make_identifier($1, driver->curr_scope_);
-        driver->curr_scope_->push_id($1);
-    }
-    else tmp = driver->make_identifier($1, id_scope);
-
-    $$ = driver->make_d_op<ptop::ASSIG>(tmp, $3);
-}
-;
-
-expr: L { $$ = $1; } 
+expr: L { $$ = $1; }
     | L GR  L { driver->process_two_child_logic<ptop::GR> ($$, $1, $3); }
     | L GRE L { driver->process_two_child_logic<ptop::GRE>($$, $1, $3); }
     | L BL  L { driver->process_two_child_logic<ptop::BL> ($$, $1, $3); }
     | L BLE L { driver->process_two_child_logic<ptop::BLE>($$, $1, $3); }
     | L EQ  L { driver->process_two_child_logic<ptop::EQ> ($$, $1, $3); }
+    | ID ASSIG expr SCOLON {
+        //std::cout << "assig: id_name = " << $1 << std::endl;
+
+        ptd::i_node* tmp = nullptr;
+        ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
+
+        if (!id_scope) {
+            tmp = driver->make_identifier($1, driver->curr_scope_);
+            driver->curr_scope_->push_id($1);
+        }
+        else tmp = driver->make_identifier($1, id_scope);
+
+        $$ = driver->make_d_op<ptop::ASSIG>(tmp, $3);
+}
 ;
 
 L: T Lsh {
