@@ -74,6 +74,8 @@ public:
         ret = ret_var;
     }
 
+    void set_not_ok() { tree.is_ok = false; }
+
     bool parse() {
         location.initialize();
 

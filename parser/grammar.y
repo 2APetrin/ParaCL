@@ -107,8 +107,8 @@ scopesh: op scopesh { }
 ;
 
 op: assig         { $$ = $1; driver->curr_scope_->add_child($$); }
-  | while         { $$ = $1; driver->curr_scope_->add_child($$); /*driver->reset_scope();*/ } //зачем тут ресет?
-  | if            { $$ = $1; driver->curr_scope_->add_child($$); /*driver->reset_scope();*/ }
+  | while         { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); } 
+  | if            { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
   | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
   | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
 ;
@@ -173,6 +173,7 @@ P: KLB expr KRB { $$ = $2; }
     if (!driver->curr_scope_->is_visible($1)) {
         std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
         $$ = driver->make_identifier("UNDEFIND");
+        driver->set_not_ok();
     }
 
     else

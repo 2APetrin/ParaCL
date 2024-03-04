@@ -35,6 +35,8 @@ class ast_tree final : private detail::node_manager {
     detail::scope* root_;
 
 public:
+    bool is_ok = true;
+
     ast_tree() = default;
 
 //---------------------------------------------------------------------
@@ -85,7 +87,11 @@ private:
 public:
 
 //---------------------------------------------------------------------
-    int execute_tree() const              { return root_->execute(); }
+    int execute_tree() const {
+        if (is_ok) 
+            return root_->execute(); 
+        throw std::runtime_error("Compilation error. Check messages upper.");
+    }
     void set_root(detail::scope* newroot) { root_ = newroot;         }
 
 //----------------------------------GRAPHVIZ----------------------------------
