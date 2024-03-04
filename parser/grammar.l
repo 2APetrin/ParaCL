@@ -50,7 +50,7 @@ ID      [a-z_]+
 
 "if"              { return yy::parser::make_IF(loc);    }
 "while"           { return yy::parser::make_WHILE(loc); }
-"print"           { return yy::parser::make_FUNC(loc);  }
+"print"           { return yy::parser::make_PRINT(loc);  }
 
 {ID}              { return yy::parser::make_ID(yytext, loc); }
 

@@ -67,7 +67,7 @@ public:
 
 //---------------------------------------------------------------------
     node_ptr make_scope(detail::scope* parent_scope = nullptr) {
-        return create_unique_push_get_ptr(new detail::scope{parent_scope});        
+        return create_unique_push_get_ptr(new detail::scope{parent_scope});
     }
 
     node_ptr make_scan() {

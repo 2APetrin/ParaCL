@@ -60,8 +60,6 @@ public:
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {scope}}\", style = \"filled\", fillcolor = \"#9ACEEB\"];\n";
 
-        dump();
-
         for (auto && i : children_) {
             i->graphviz_dump(out);
             out << "    node_" << this << "->node_" << i << " [color = \"#293133\"];\n";
@@ -79,9 +77,9 @@ public:
     }
 
 //--------------------------work with symtab----------------------------
-    void push_id(std::string name, int value = 0) { symtab_.push_id(name, value); }
+    void push_id(std::string &name, int value = 0) { symtab_.push_id(name, value); }
 
-    scope* is_visible(std::string name) {
+    scope* is_visible(std::string &name) {
         if (symtab_.is_visible(name)) return this;
 
         scope* curr = parent_scope_;
@@ -113,6 +111,7 @@ public:
 
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {name=" << name_ << "}}\", style = \"filled\", fillcolor = \"#CDA4DE\"];\n";
+        out << "    node_" << this << "->node_" << scope_ << " [ style = \"dotted\", color = \"#293133\"];\n";
     }
 
     //----------------------scope and symtab part----------------------
@@ -165,8 +164,8 @@ public:
 
         l_->graphviz_dump(out);
         r_->graphviz_dump(out);
-        out << "    node_" << this << "->node_" << l_ << " [color = \"#293133\"];\n";
-        out << "    node_" << this << "->node_" << r_ << " [color = \"#293133\"];\n";
+        out << "    node_" << this << "->node_" << l_ << " [color = \"#FF2B2B\"];\n";
+        out << "    node_" << this << "->node_" << r_ << " [color = \"#1164B4\"];\n";
     }
 
     void setl(i_node *newl) { l_ = newl; }

@@ -58,7 +58,7 @@
 
     IF     "if"
     WHILE  "while"
-    FUNC   "print"
+    PRINT  "print"
 
     ERR
 ;
@@ -72,12 +72,17 @@
 // non terminal
 %nterm <ptd::i_node*> scope
 %nterm <ptd::i_node*> scope_br
-%nterm <ptd::i_two_child*> assig
+%nterm <ptd::i_node*> scope_br_start
+
 %nterm <ptd::i_two_child*> if
-%nterm <ptd::i_node*> if_start
+%nterm <ptd::i_node*>      if_start
+
 %nterm <ptd::i_two_child*> while
-%nterm <ptd::i_node*> while_start
+%nterm <ptd::i_node*>      while_start
+
+%nterm <ptd::i_two_child*> assig
 %nterm <ptd::i_one_child*> lang_func
+
 %nterm <ptd::i_node*> op
 %nterm <ptd::i_node*> expr
 %nterm <ptd::i_node*> L
@@ -91,26 +96,26 @@
 
 %%
 
-program: scope { /*driver->tree.execute_tree()*/ driver->tree.graphviz_dump(); }
+program: scope { driver->tree.graphviz_dump(); driver->tree.execute_tree(); }
 ;
 
-scope: op scopesh { driver->curr_scope_->add_child($1); }
+scope: op scopesh { }
 ;
 
-scopesh: op scopesh { driver->curr_scope_->add_child($1); }
+scopesh: op scopesh { }
       | %empty
 ;
 
 op: assig         { $$ = $1; driver->curr_scope_->add_child($$); }
-  | while         { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
-  | if            { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
+  | while         { $$ = $1; driver->curr_scope_->add_child($$); /*driver->reset_scope();*/ } //зачем тут ресет?
+  | if            { $$ = $1; driver->curr_scope_->add_child($$); /*driver->reset_scope();*/ }
   | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
   | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
 ;
 
-scope_br: open_br scope close_br { $$ = $2; }
+scope_br: scope_br_start scope close_br { $$ = $1; std::cout << "SCOPE_BR=" << $$ << std::endl; }
 ;
-open_br:  SLB { driver->new_scope();   }
+scope_br_start: SLB { driver->new_scope(); $$ = driver->curr_scope_; }
 ;
 close_br: SRB { driver->reset_scope(); }
 ;
@@ -121,8 +126,11 @@ assig: ID ASSIG expr SCOLON {
     ptd::i_node* tmp = nullptr;
     ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
 
-    if (!id_scope) tmp = driver->make_identifier($1, id_scope);
-    else           tmp = driver->make_identifier($1, driver->curr_scope_);
+    if (!id_scope) {
+        tmp = driver->make_identifier($1, driver->curr_scope_);
+        driver->curr_scope_->push_id($1);
+    }
+    else tmp = driver->make_identifier($1, id_scope);
 
     $$ = driver->make_d_op<ptop::ASSIG>(tmp, $3);
 }
@@ -167,7 +175,7 @@ P: KLB expr KRB { $$ = $2; }
         $$ = driver->make_identifier("UNDEFIND");
     }
 
-    else 
+    else
         $$ = driver->make_identifier($1, driver->curr_scope_);
 }
  | NUMBER   { $$ = driver->make_number($1); }
@@ -186,7 +194,7 @@ while: while_start op { $$ = driver->make_d_op<ptop::WHILE>($1, $2); }
 while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; }
 ;
 
-lang_func: FUNC KLB expr KRB SCOLON { $$ = driver->make_s_op<ptop::PRINT>($3); }
+lang_func: PRINT KLB expr KRB SCOLON { $$ = driver->make_s_op<ptop::PRINT>($3); }
 ;
 
 %%
