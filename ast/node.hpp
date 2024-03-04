@@ -116,7 +116,6 @@ public:
 
     //----------------------scope and symtab part----------------------
     void set_value(int value)    { scope_->set_value(name_, value); }
-    std::string get_name()       { return name_;                    }
     int execute() const override { return scope_->get_value(name_); }
 };
 
@@ -172,10 +171,7 @@ public:
     void setr(i_node *newr) { r_ = newr; }
 };
 
-class scan final : public i_node {
-    i_node* scan_id_;
-
-public:
+struct scan final : public i_node {
     scan() = default;
 
     int execute() const override {
@@ -188,14 +184,10 @@ public:
 
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
-        std::cout << "scan_id_name=" << static_cast<identifier*>(scan_id_)->get_name() << std::endl;
     }
 
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {scan}}\", style = \"filled\", fillcolor = \"#CDA4DE\"];\n";
-
-        scan_id_->graphviz_dump(out);
-        out << "    node_" << this << "->node_" << scan_id_ << " [color = \"#293133\"];\n";
     }
 };
 

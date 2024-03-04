@@ -1,9 +1,17 @@
 a = 1;
-{
-    b = 3;
-    gigacock = 100;
-}
-popa = 300 + 12 + 152 - 14;
 
-print(popa);
-print(gigacock);
+{
+    b = 1;
+    a = 2;
+}
+
+popa = 3;
+
+if (popa) print(popa);
+
+while (popa) {
+    tmp = a - popa;
+    print(tmp);
+    popa = popa - 1;
+}
+

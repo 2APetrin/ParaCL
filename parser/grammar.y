@@ -107,8 +107,8 @@ scopesh: op scopesh { }
 ;
 
 op: assig         { $$ = $1; driver->curr_scope_->add_child($$); }
-  | while         { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); } 
-  | if            { $$ = $1; driver->curr_scope_->add_child($$); driver->reset_scope(); }
+  | while         { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); } 
+  | if            { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); }
   | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
   | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
 ;
@@ -167,23 +167,23 @@ Tsh: MUL P Tsh { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
 ;
 
 P: KLB expr KRB { $$ = $2; }
-| ID {
-    std::cout << "id: id_name = " << $1 << std::endl;
+ | ID {
+    ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
 
-    if (!driver->curr_scope_->is_visible($1)) {
+    if (!id_scope) {
         std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
         $$ = driver->make_identifier("UNDEFIND");
         driver->set_not_ok();
     }
 
     else
-        $$ = driver->make_identifier($1, driver->curr_scope_);
+        $$ = driver->make_identifier($1, id_scope);
 }
  | NUMBER   { $$ = driver->make_number($1); }
- | SCAN     { $$ = driver->make_scan(); } 
+ | SCAN     { $$ = driver->make_scan(); }
 ;
 
-if: if_start op { $$ = driver->make_d_op<ptop::IF>($1, $2); }
+if: if_start op { $$ = driver->make_d_op<ptop::IF>($1, $2); std::cout << "IF=" << $$ << std::endl; }
 ;
 
 if_start: IF KLB expr KRB { driver->new_scope(); $$ = $3; }
