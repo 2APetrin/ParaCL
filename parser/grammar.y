@@ -71,11 +71,14 @@
 
 // non terminal
 %nterm <ptd::i_node*> scope
+%nterm <ptd::i_node*> scope_br
 %nterm <ptd::i_two_child*> assig
 %nterm <ptd::i_two_child*> if
+%nterm <ptd::i_two_child*> if_start
 %nterm <ptd::i_two_child*> while
+%nterm <ptd::i_two_child*> while_start
 %nterm <ptd::i_two_child*> func
-%nterm <ptd::i_two_child*> op
+%nterm <ptd::i_node*> op
 %nterm <ptd::i_two_child*> expr
 %nterm <ptd::i_two_child*> L
 %nterm <ptd::i_two_child*> Lsh
@@ -98,13 +101,18 @@ scopesh: op scopesh { driver->curr_scope_->add_child($1); }
       | %empty
 ;
 
-op: assig         { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
-  | while         { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
-  | if            { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
-  | func          { $$ = $1; curr_scope_->add_child(static_cast<ptd::i_node*>($$)); }
-  | SLB scope SRB { 
-        std::cout << "op { comp }" << std::endl; 
-    }
+op: assig         { $$ = $1; curr_scope_->add_child($$); }
+  | while         { $$ = $1; curr_scope_->add_child($$); driver->reset_scope(); }
+  | if            { $$ = $1; curr_scope_->add_child($$); driver->reset_scope(); }
+  | func          { $$ = $1; curr_scope_->add_child($$); }
+  | scope_br      { $$ = $1  curr_scope_->add_child($$); }
+;
+
+scope_br: open_br scope close_br { $$ = $2; }
+;
+open_br:  SLB { driver->new_scope();   }
+;
+close_br: SRB { driver->reset_scope(); }
 ;
 
 assig: ID ASSIG expr SCOLON {
@@ -166,10 +174,16 @@ P: KLB expr KRB { $$ = $2; }
  | SCAN     { $$ = driver->tree.make_scan(); } 
 ;
 
-if: IF KLB expr KRB op { $$ = make_d_op<ptop::IF>($3, $5); }
+if: if_start op { $$ = make_d_op<ptop::IF>($1, $2); }
 ;
 
-while: WHILE KLB expr KRB op { $$ = make_d_op<ptop::WHILE>($3, $5); }
+if_start: IF KLB expr KRB { driver->new_scope(); $$ = $3; }
+;
+
+while: while_start op { $$ = make_d_op<ptop::WHILE>($1, $2); }
+;
+
+while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; }
 ;
 
 func: FUNC KLB expr KRB SCOLON { $$ = make_s_op<ptop::PRINT>($3); }

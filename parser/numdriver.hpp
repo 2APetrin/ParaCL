@@ -15,20 +15,20 @@ public:
     yy::location location;
 
     para_tree::ast_tree tree;
-    para_tree::detail::scope* curr_scope_ = nullptr;
+    ptd::scope* curr_scope_ = nullptr;
 
-    NumDriver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope()) {
-        tree.set_root(curr_scope);
+    NumDriver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope())) {
+        tree.set_root(curr_scope_);
     }
 
     template <ptop type>
     ptd::i_two_child* make_d_op(node_ptr l = nullptr, node_ptr r = nullptr) {
-        return tree.make_ed_op<type>(l, r);
+        return tree.make_d_op<type>(l, r);
     }
 
     template <ptop type>
     ptd::i_one_child* make_s_op(node_ptr chld = nullptr) {
-        return tree.make_es_op<type>(chld);
+        return tree.make_s_op<type>(chld);
     }
 
     ptd::i_node* make_number(int val) {
@@ -39,8 +39,12 @@ public:
         return tree.make_identifier(str, scp);
     }
 
-    ptd::i_node* make_scope(ptd::scope* parent_scope = nullptr) {
-        return tree.make_scope(parent_scope);
+    void new_scope() { 
+        curr_scope_ = static_cast<ptd::scope*>(tree.make_scope(curr_scope_)); 
+    }
+
+    void reset_scope() {
+        curr_scope_ = curr_scope_->get_parent();
     }
 
     ptd::i_node* make_scan() { return tree.make_scan(); }

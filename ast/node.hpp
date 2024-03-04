@@ -66,6 +66,8 @@ public:
         }
     }
 
+    scope* get_parent() { return parent_scope_; }
+
     void add_child(const i_node* chld) { children_.push_back(chld); }
 
     int execute() const override {
