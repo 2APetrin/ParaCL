@@ -288,7 +288,7 @@ struct two_child_op<op_type::GR> final : public i_two_child {
         int l = l_->execute();
         int r = r_->execute();
 
-        return (l > r) ? 1 : 0;
+        return l > r;
     }
 };
 
@@ -300,7 +300,7 @@ struct two_child_op<op_type::GRE> final : public i_two_child {
         int l = l_->execute();
         int r = r_->execute();
 
-        return (l >= r) ? 1 : 0;
+        return l >= r;
     }
 };
 
@@ -312,7 +312,7 @@ struct two_child_op<op_type::BL> final : public i_two_child {
         int l = l_->execute();
         int r = r_->execute();
 
-        return (l < r) ? 1 : 0;
+        return l < r;
     }
 };
 
@@ -324,7 +324,7 @@ struct two_child_op<op_type::BLE> final : public i_two_child {
         int l = l_->execute();
         int r = r_->execute();
 
-        return (l <= r) ? 1 : 0;
+        return l <= r;
     }
 };
 
@@ -336,7 +336,19 @@ struct two_child_op<op_type::EQ> final : public i_two_child {
         int l = l_->execute();
         int r = r_->execute();
 
-        return (l == r) ? 1 : 0;
+        return l == r;
+    }
+};
+
+template<>
+struct two_child_op<op_type::NEQ> final : public i_two_child {
+    two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::NEQ) {}
+
+    int execute() const override {
+        int l = l_->execute();
+        int r = r_->execute();
+
+        return l != r;
     }
 };
 
@@ -348,7 +360,7 @@ struct two_child_op<op_type::ASSIG> final : public i_two_child {
         int r = r_->execute();
         static_cast<identifier*>(l_)->set_value(r);
 
-        return 0;
+        return r;
     }
 };
 

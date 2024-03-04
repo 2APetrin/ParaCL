@@ -25,5 +25,5 @@ int main() {
 
     int b = a = 7;
 
-    std::cout << b << std::endl;
+    std::cout << - - - b << std::endl;
 }
