@@ -9,9 +9,8 @@ popa = 3;
 
 if (popa) print(popa);
 
-while (popa) {
+while (popa = 1) {
     tmp = a - popa;
     print(tmp);
     popa = popa - 1;
 }
-

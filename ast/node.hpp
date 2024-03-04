@@ -205,6 +205,27 @@ struct one_child_op<op_type::PRINT> final : public i_one_child {
     }
 };
 
+template<>
+struct one_child_op<op_type::NOT> final : public i_one_child {
+    one_child_op(i_node *child = nullptr) : i_one_child(child, op_type::NOT) {}
+
+    int execute() const override { return !(child_->execute()); }
+};
+
+template<>
+struct one_child_op<op_type::UNARY_PLUS> final : public i_one_child {
+    one_child_op(i_node *child = nullptr) : i_one_child(child, op_type::UNARY_PLUS) {}
+
+    int execute() const override { return +(child_->execute()); }
+};
+
+template<>
+struct one_child_op<op_type::UNARY_MINUS> final : public i_one_child {
+    one_child_op(i_node *child = nullptr) : i_one_child(child, op_type::UNARY_MINUS) {}
+
+    int execute() const override { return -(child_->execute()); }
+};
+
 //----------------------------------------------------------------------
 template <op_type T>
 struct two_child_op final : public i_two_child { };
@@ -356,6 +377,27 @@ struct two_child_op<op_type::WHILE> final : public i_two_child {
 
         return 0;
     }
+};
+
+template<>
+struct two_child_op<op_type::AND> final : public i_two_child {
+    two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::AND) {}
+
+    int execute() const override { return (l_->execute() && r_->execute()); }
+};
+
+template<>
+struct two_child_op<op_type::OR> final : public i_two_child {
+    two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::OR) {}
+
+    int execute() const override { return (l_->execute() || r_->execute()); }
+};
+
+template<>
+struct two_child_op<op_type::XOR> final : public i_two_child {
+    two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::XOR) {}
+
+    int execute() const override { return (!(l_->execute()) != !(r_->execute())); }
 };
 
 } /*namespace detail*/

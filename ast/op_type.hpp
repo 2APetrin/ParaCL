@@ -21,6 +21,14 @@ enum class op_type {
     IF,
     WHILE,
 
+    AND,
+    OR,
+    XOR,
+    NOT,
+
+    UNARY_PLUS,
+    UNARY_MINUS,
+
     ERROR = -1
 };
 
