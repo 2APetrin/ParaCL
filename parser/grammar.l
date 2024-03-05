@@ -54,6 +54,7 @@ ID      [a-z_]+
 
 {ID}              { return yy::parser::make_ID(yytext, loc); }
 
+0                 { return yy::parser::make_NUMBER(0, loc); }
 {DIGIT1}{DIGIT}*  { return yy::parser::make_NUMBER(std::atoi(yytext), loc); }
 .                 { throw yy::parser::syntax_error(loc, "invalid character: " + std::string(yytext)); }
 
