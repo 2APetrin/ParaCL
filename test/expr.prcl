@@ -1,16 +1,4 @@
-a = 1;
+a = - 1 - (2 - 3) - -4;
+print a;
 
-{
-    b = 1;
-    a = 2;
-}
 
-popa = 3;
-
-if (popa) print(popa);
-
-while (popa = 1) {
-    tmp = a - popa;
-    print(tmp);
-    popa = popa - 1;
-}

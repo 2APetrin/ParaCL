@@ -80,7 +80,7 @@
 %nterm <ptd::i_two_child*> while
 %nterm <ptd::i_node*>      while_start
 
-%nterm <ptd::i_two_child*> assig
+//%nterm <ptd::i_two_child*> assig
 %nterm <ptd::i_one_child*> lang_func
 
 %nterm <ptd::i_node*> op
@@ -90,6 +90,7 @@
 %nterm <ptd::i_node*> T
 %nterm <ptd::i_node*> Tsh
 %nterm <ptd::i_node*> P
+%nterm <ptd::i_node*> G
 
 
 %start program
@@ -106,7 +107,7 @@ scopesh: op scopesh { }
       | %empty
 ;
 
-op: expr          { $$ = $1; driver->curr_scope_->add_child($$); }
+op: expr SCOLON   { $$ = $1; driver->curr_scope_->add_child($$); }
   | while         { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); } 
   | if            { $$ = $1; driver->reset_scope(); driver->curr_scope_->add_child($$); }
   | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
@@ -126,7 +127,7 @@ expr: L { $$ = $1; }
     | L BL  L { driver->process_two_child_logic<ptop::BL> ($$, $1, $3); }
     | L BLE L { driver->process_two_child_logic<ptop::BLE>($$, $1, $3); }
     | L EQ  L { driver->process_two_child_logic<ptop::EQ> ($$, $1, $3); }
-    | ID ASSIG expr SCOLON {
+    | ID ASSIG expr {
         //std::cout << "assig: id_name = " << $1 << std::endl;
 
         ptd::i_node* tmp = nullptr;
@@ -149,19 +150,24 @@ L: T Lsh {
 ;
 
 Lsh: ADD T Lsh { driver->process_two_child_arith<ptop::ADD>($$, $2, $3); }
-   | SUB T Lsh { driver->process_two_child_arith<ptop::SUB>($$, $2, $3); }
+   | SUB T Lsh { driver->process_two_child_arith<ptop::ADD>($$, driver->make_s_op<ptop::UNARY_MINUS>($2), $3); }
    | %empty
 ;
 
-T: P Tsh {
+T: G Tsh {
     if ($2) { static_cast<ptd::i_two_child*>($2)->setl($1); $$ = $2; }
     else    { $$ = $1; }
 }
 ;
 
-Tsh: MUL P Tsh { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
-   | DIV P Tsh { driver->process_two_child_arith<ptop::DIV>($$, $2, $3); }
+Tsh: MUL G Tsh { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
+   | DIV G Tsh { driver->process_two_child_arith<ptop::DIV>($$, $2, $3); }
    | %empty
+;
+
+G:   SUB P { $$ = driver->make_s_op<ptop::UNARY_MINUS>($2); };
+   | ADD P { $$ = $2; }
+   | P       { $$ = $1; }
 ;
 
 P: KLB expr KRB { $$ = $2; }
@@ -193,7 +199,7 @@ while: while_start op { $$ = driver->make_d_op<ptop::WHILE>($1, $2); }
 while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; }
 ;
 
-lang_func: PRINT KLB expr KRB SCOLON { $$ = driver->make_s_op<ptop::PRINT>($3); }
+lang_func: PRINT expr SCOLON { $$ = driver->make_s_op<ptop::PRINT>($2); }
 ;
 
 %%
