@@ -47,8 +47,12 @@ ID      [a-z_]+
 "<"               { return yy::parser::make_BL(loc);  }
 "<="              { return yy::parser::make_BLE(loc); }
 "=="              { return yy::parser::make_EQ(loc);  }
+"!="              { return yy::parser::make_NEQ(loc); }
+
+"!"               { return yy::parser::make_NOT(loc);  }
 
 "if"              { return yy::parser::make_IF(loc);    }
+"else"            { return yy::parser::make_ELSE(loc);  }
 "while"           { return yy::parser::make_WHILE(loc); }
 "print"           { return yy::parser::make_PRINT(loc);  }
 
@@ -56,7 +60,7 @@ ID      [a-z_]+
 
 0                 { return yy::parser::make_NUMBER(0, loc); }
 {DIGIT1}{DIGIT}*  { return yy::parser::make_NUMBER(std::atoi(yytext), loc); }
-.                 { throw yy::parser::syntax_error(loc, "invalid character: " + std::string(yytext)); }
+.                 { throw  yy::parser::syntax_error(loc, "invalid character: " + std::string(yytext)); }
 
 <<EOF>>     { return yyterminate(); }
 
