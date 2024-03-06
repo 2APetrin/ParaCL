@@ -13,15 +13,12 @@
 
 %code requires
 {
-    #include <iostream>
-    #include <string>
     #include "tree.hpp"
 
-    namespace ptd = para_tree::detail;
-    using ptop = para_tree::op_type;
+    namespace ptd  = para_tree::detail;
+    using     ptop = para_tree::op_type;
 
     namespace yy { class NumDriver; }
-
 }
 
 
@@ -33,6 +30,8 @@
 
     YY_DECL;
 }
+
+%right ELSE "else"
 
 %token
     ADD    "+"
@@ -64,18 +63,20 @@
 ;
 
 
-// terminal tokens
+//--------------terminal--------------
 %token <int> NUMBER
 %token <std::string> ID
 
 
-// non terminal
+//--------------non terminal--------------
 %nterm <ptd::i_node*> scope
 %nterm <ptd::i_node*> scope_br
 %nterm <ptd::i_node*> scope_br_start
 
-%nterm <ptd::i_two_child*> if
-%nterm <ptd::i_node*>      if_start
+%nterm <ptd::i_node*> if
+//%nterm <ptd::i_node*> else
+//%nterm <ptd::i_node*> if_else
+%nterm <ptd::i_node*> if_start
 
 %nterm <ptd::i_two_child*> while
 %nterm <ptd::i_node*>      while_start
@@ -83,6 +84,7 @@
 //%nterm <ptd::i_two_child*> assig
 %nterm <ptd::i_one_child*> lang_func
 
+//--------------expr--------------
 %nterm <ptd::i_node*> op
 %nterm <ptd::i_node*> expr
 %nterm <ptd::i_node*> L
@@ -91,20 +93,18 @@
 %nterm <ptd::i_node*> Tsh
 %nterm <ptd::i_node*> P
 %nterm <ptd::i_node*> G
-
+//--------------------------------
 
 %start program
 
 %%
 
-program: scope { driver->tree.graphviz_dump(); driver->tree.execute_tree(); }
-;
+program: scope { driver->tree.graphviz_dump(); driver->tree.execute_tree(); } ;
 
-scope: op scopesh { }
-;
+scope: op scopesh   { } ;
 
 scopesh: op scopesh { }
-      | %empty
+       | %empty     { }
 ;
 
 op: expr SCOLON   { $$ = $1; driver->curr_scope_->add_child($$); }
@@ -114,12 +114,11 @@ op: expr SCOLON   { $$ = $1; driver->curr_scope_->add_child($$); }
   | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
 ;
 
-scope_br: scope_br_start scope close_br { $$ = $1; std::cout << "SCOPE_BR=" << $$ << std::endl; }
-;
-scope_br_start: SLB { driver->new_scope(); $$ = driver->curr_scope_; }
-;
-close_br: SRB { driver->reset_scope(); }
-;
+scope_br: scope_br_start scope close_br { $$ = $1; std::cout << "SCOPE_BR=" << $$ << std::endl; } ;
+
+scope_br_start: SLB { driver->new_scope(); $$ = driver->curr_scope_; } ;
+
+close_br: SRB { driver->reset_scope(); } ;
 
 expr: L { $$ = $1; }
     | L GR  L { driver->process_two_child_logic<ptop::GR> ($$, $1, $3); }
@@ -128,8 +127,6 @@ expr: L { $$ = $1; }
     | L BLE L { driver->process_two_child_logic<ptop::BLE>($$, $1, $3); }
     | L EQ  L { driver->process_two_child_logic<ptop::EQ> ($$, $1, $3); }
     | ID ASSIG expr {
-        //std::cout << "assig: id_name = " << $1 << std::endl;
-
         ptd::i_node* tmp = nullptr;
         ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
 
@@ -151,7 +148,7 @@ L: T Lsh {
 
 Lsh: ADD T Lsh { driver->process_two_child_arith<ptop::ADD>($$, $2, $3); }
    | SUB T Lsh { driver->process_two_child_arith<ptop::ADD>($$, driver->make_s_op<ptop::UNARY_MINUS>($2), $3); }
-   | %empty
+   | %empty    { }
 ;
 
 T: G Tsh {
@@ -162,12 +159,12 @@ T: G Tsh {
 
 Tsh: MUL G Tsh { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
    | DIV G Tsh { driver->process_two_child_arith<ptop::DIV>($$, $2, $3); }
-   | %empty
+   | %empty    { }
 ;
 
-G:   SUB P { $$ = driver->make_s_op<ptop::UNARY_MINUS>($2); };
-   | ADD P { $$ = $2; }
-   | P       { $$ = $1; }
+G: SUB P { $$ = driver->make_s_op<ptop::UNARY_MINUS>($2); };
+ | ADD P { $$ = $2; }
+ | P     { $$ = $1; }
 ;
 
 P: KLB expr KRB { $$ = $2; }
@@ -182,25 +179,22 @@ P: KLB expr KRB { $$ = $2; }
 
     else
         $$ = driver->make_identifier($1, id_scope);
-}
+ }
  | NUMBER   { $$ = driver->make_number($1); }
  | SCAN     { $$ = driver->make_scan(); }
 ;
 
 if: if_start op { $$ = driver->make_d_op<ptop::IF>($1, $2); std::cout << "IF=" << $$ << std::endl; }
+  | if_start op %prec ELSE op { std::cout << "else variant\n"; }
 ;
 
-if_start: IF KLB expr KRB { driver->new_scope(); $$ = $3; }
-;
+if_start: IF KLB expr KRB { driver->new_scope(); $$ = $3; } ;
 
-while: while_start op { $$ = driver->make_d_op<ptop::WHILE>($1, $2); }
-;
+while: while_start op { $$ = driver->make_d_op<ptop::WHILE>($1, $2); } ;
 
-while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; }
-;
+while_start: WHILE KLB expr KRB { driver->new_scope(); $$ = $3; } ;
 
-lang_func: PRINT expr SCOLON { $$ = driver->make_s_op<ptop::PRINT>($2); }
-;
+lang_func: PRINT expr SCOLON { $$ = driver->make_s_op<ptop::PRINT>($2); } ;
 
 %%
 
@@ -213,3 +207,8 @@ namespace yy {
         std::cerr << lcn << ": " << msg << '\n';
     }
 }
+
+
+
+
+//if_start op %prec ELSE op { $$ = driver->make_t_op<ptop::IF_ELSE>($1, $2, $3); }

@@ -20,6 +20,7 @@ enum class op_type {
     ASSIG,
 
     IF,
+    IF_ELSE,
     WHILE,
 
     AND,

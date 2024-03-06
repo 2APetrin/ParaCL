@@ -1,7 +1,8 @@
 #pragma once
 
 #include "op_type.hpp"
-#include "../symtab/symtab.hpp"
+#include "symtab.hpp"
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -169,6 +170,38 @@ public:
 
     void setl(i_node *newl) { l_ = newl; }
     void setr(i_node *newr) { r_ = newr; }
+};
+
+//----------------------------------------------------------------------
+struct i_three_child : public i_node {
+protected:
+    std::array<i_node*, 3> children_;
+    op_type type_;
+
+public:
+    i_three_child(i_node* fst = nullptr, i_node* snd = nullptr, i_node* trd = nullptr, op_type type = op_type::ERROR) : type_(type) {
+        children_[0] = fst; children_[1] = snd; children_[2] = trd;
+    }
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "three children:" << std::endl;
+        for (auto && i : children_) std::cout << i << std::endl;
+    }
+
+    void graphviz_dump(std::ofstream& out) const override {
+        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
+
+        for (auto && i : children_) {
+            i->graphviz_dump(out);
+            out << "    node_" << this << "->node_" << i << " [color = \"#1164B4\"];\n";
+        }
+    }
+
+    void setn(int pos, i_node* node) {
+        if (0 > pos || 2 < pos) throw std::runtime_error("bad setn posinion in i_three_child\n");
+        children_[pos] = node;
+    }
 };
 
 struct scan final : public i_node {
@@ -410,6 +443,23 @@ struct two_child_op<op_type::XOR> final : public i_two_child {
     two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::XOR) {}
 
     int execute() const override { return (!(l_->execute()) != !(r_->execute())); }
+};
+
+//----------------------------------------------------------------------
+template <op_type T>
+struct three_child_op final : public i_three_child { };
+
+template<>
+struct three_child_op<op_type::IF_ELSE> final : public i_three_child {
+    three_child_op(i_node* fst, i_node* snd, i_node* trd) : i_three_child(fst, snd, trd, op_type::IF_ELSE) {}
+
+    int execute() const override {
+        int cond = children_[0]->execute();
+        if (cond)  children_[1]->execute();
+        else       children_[2]->execute();
+
+        return 0;
+    }
 };
 
 } /*namespace detail*/

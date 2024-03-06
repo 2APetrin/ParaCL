@@ -40,6 +40,15 @@ public:
     ast_tree() = default;
 
 //---------------------------------------------------------------------
+    /**make three child operator*/
+    template <op_type T>
+    detail::i_three_child* make_t_op(node_ptr fst, node_ptr snd, node_ptr trd) {
+        node_ptr node = create_unique_push_get_ptr(new detail::three_child_op<T>{fst, snd, trd});
+
+        return static_cast<detail::i_three_child*>(node);
+    }
+
+//---------------------------------------------------------------------
     /**make two children operator*/
     template <op_type T>
     detail::i_two_child* make_d_op(node_ptr l = nullptr, node_ptr r = nullptr) {

@@ -22,6 +22,11 @@ public:
     }
 
     template <ptop type>
+    ptd::i_three_child* make_t_op(node_ptr fst = nullptr, node_ptr snd = nullptr, node_ptr trd = nullptr) {
+        return tree.make_t_op<type>(fst, snd, trd);
+    }
+
+    template <ptop type>
     ptd::i_two_child* make_d_op(node_ptr l = nullptr, node_ptr r = nullptr) {
         return tree.make_d_op<type>(l, r);
     }
