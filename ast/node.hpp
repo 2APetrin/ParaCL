@@ -445,6 +445,13 @@ struct two_child_op<op_type::XOR> final : public i_two_child {
     int execute() const override { return (!(l_->execute()) != !(r_->execute())); }
 };
 
+template<>
+struct two_child_op<op_type::MOD> final : public i_two_child {
+    two_child_op(i_node *l = nullptr, i_node *r = nullptr) : i_two_child(l, r, op_type::MOD) {}
+
+    int execute() const override { return (l_->execute()) % (r_->execute()); }
+};
+
 //----------------------------------------------------------------------
 template <op_type T>
 struct three_child_op final : public i_three_child { };

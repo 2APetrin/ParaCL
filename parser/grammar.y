@@ -83,11 +83,11 @@
 %nterm <ptd::i_node*> op_closed
 %nterm <ptd::i_node*> op_simple
 
-/* %nterm <ptd::i_node*> if
-%nterm <ptd::i_node*> if_start */
+%nterm <ptd::i_node*> if
+%nterm <ptd::i_node*> if_start 
 
-/* %nterm <ptd::i_two_child*> while
-%nterm <ptd::i_node*>      while_start */
+%nterm <ptd::i_two_child*> while
+%nterm <ptd::i_node*>      while_start
 
 %nterm <ptd::i_one_child*> lang_func
 
@@ -142,7 +142,7 @@ op_simple: expr SCOLON   { $$ = $1; driver->curr_scope_->add_child($$); }
          | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
          ;
 
-while_opened: WHILE KLB expr KRB op_opened { } ; // rewrite using while_start
+while_opened: WHILE KLB expr KRB op_opened {  } ; // rewrite using while_start
 
 while_closed: WHILE KLB expr KRB op_closed { } ; // rewrite using while_start
 

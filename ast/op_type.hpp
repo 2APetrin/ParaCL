@@ -7,6 +7,7 @@ enum class op_type {
     SUB,
     MUL,
     DIV,
+    MOD,
 
     GR,
     GRE,

@@ -1,7 +1,7 @@
-fact_num = ?;
+fact_num = 12;
 
-if (fact_num <  0) print(-1);
-if (fact_num == 0) print( 1);
+if (fact_num <  0) print (-1);
+if (fact_num == 0) print ( 1);
 
 if (fact_num > 0) {
     a = 1;
@@ -10,5 +10,5 @@ if (fact_num > 0) {
         fact_num = fact_num - 1;
     }
 
-    print(a);
+    print (a);
 }
