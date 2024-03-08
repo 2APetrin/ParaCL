@@ -1,7 +1,0 @@
-.vscode
-.DS_Store
-a.out
-lex.yy.cc
-build
-tree/para_tree_old.hpp
-tree/tree.cpp

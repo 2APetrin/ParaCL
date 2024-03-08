@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) try
         if      (argv[i] == std::string("-p")) drv.trace_parsing = true;
         else if (argv[i] == std::string("-s")) drv.trace_scanning = true;
         else                                   drv.parse(argv[i]);
-  
+
   return 0;
 }
 catch (std::exception& exc) {

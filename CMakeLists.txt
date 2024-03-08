@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -g -O0 -D DEBUG -DDUMP -fsanitize=addre
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 flex_target(scanner

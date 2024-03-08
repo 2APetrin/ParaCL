@@ -85,7 +85,7 @@
 %token <std::string> ID
 
 
-//--------------non terminal--------------
+//------------non terminal------------
 %nterm <ptd::i_node*> scope
 %nterm <ptd::i_node*> scope_br
 %nterm <ptd::i_node*> scope_br_start
@@ -175,12 +175,10 @@ primary_expr: KLB expr KRB { $$ = $2; }
         $$ = drv->make_identifier("UNDEFIND");
         drv->set_not_ok();
     }
-
-    else
-        $$ = drv->make_identifier($1, id_scope);
+    else $$ = drv->make_identifier($1, id_scope);
  }
  | NUMBER   { $$ = drv->make_number($1); }
- | SCAN     { $$ = drv->make_scan(); }
+ | SCAN     { $$ = drv->make_scan();     }
  ;
 
 if: if_start op %prec THEN {
