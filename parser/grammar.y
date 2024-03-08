@@ -73,7 +73,7 @@
 %right    ASSIG
 %left     OR
 %left     AND
-%nonassoc EQ  NEQ
+%nonassoc EQ NEQ
 %nonassoc BL BLE GR GRE
 %left     ADD SUB
 %left     MUL DIV MOD
@@ -112,19 +112,19 @@
 %%
 
 program: scope {
-                #ifdef DUMP 
-                    drv->tree.graphviz_dump();
-                #endif
-                    drv->tree.execute_tree();
-                }
-                ;
+#ifdef DUMP
+    drv->tree.graphviz_dump();
+#endif
+    drv->tree.execute_tree();
+}
+;
 
 scope: op scope { }
      | %empty   { }
      ;
 
 op: expr SCOLON   { $$ = $1;              drv->curr_scope_->add_child($$); }
-  | while         { $$ = $1;              drv->curr_scope_->add_child($$); } 
+  | while         { $$ = $1;              drv->curr_scope_->add_child($$); }
   | if            { $$ = $1;              drv->curr_scope_->add_child($$); }
   | lang_func     { $$ = $1;              drv->curr_scope_->add_child($$); }
   | scope_br      { $$ = $1;              drv->curr_scope_->add_child($$); }
@@ -163,8 +163,8 @@ expr: primary_expr
         else tmp = drv->make_identifier($1, id_scope);
 
         $$ = drv->make_d_op<ptop::ASSIG>(tmp, $3);
-}
-;
+    }
+    ;
 
 primary_expr: KLB expr KRB { $$ = $2; }
  | ID {
@@ -181,7 +181,7 @@ primary_expr: KLB expr KRB { $$ = $2; }
  }
  | NUMBER   { $$ = drv->make_number($1); }
  | SCAN     { $$ = drv->make_scan(); }
-;
+ ;
 
 if: if_start op %prec THEN {
         $$ = drv->make_d_op<ptop::IF>($1, drv->curr_scope_);
@@ -191,12 +191,9 @@ if: if_start op %prec THEN {
         $$ = drv->make_t_op<ptop::IF_ELSE>($1, $3.first, $3.second);
         drv->reset_scope();
 }
-;
+  ;
 
-else: else_start op {
-    $$ = std::make_pair($1, drv->curr_scope_);
-}
-;
+else: else_start op { $$ = std::make_pair($1, drv->curr_scope_); } ;
 
 if_start: IF KLB expr KRB { drv->new_scope(); $$ = $3; } ;
 

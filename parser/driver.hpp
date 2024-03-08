@@ -20,7 +20,7 @@ public:
     para_tree::ast_tree tree;
     ptd::scope* curr_scope_;
 
-    driver(ptd::scope* curr_scope = nullptr) : curr_scope_(static_cast<ptd::scope*>(tree.make_scope())) {
+    driver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope())) {
         tree.set_root(curr_scope_);
     }
 

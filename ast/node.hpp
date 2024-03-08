@@ -17,7 +17,7 @@ namespace detail {
 struct i_node {
     virtual void graphviz_dump(std::ofstream&) const = 0;
     virtual int  execute() const = 0;
-    virtual void dump() const = 0;
+    virtual void dump()    const = 0;
     virtual     ~i_node() = default;
 };
 

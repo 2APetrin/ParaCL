@@ -29,7 +29,6 @@ ID      [a-z_]+
 "-"               { return yy::parser::make_SUB(loc); }
 "*"               { return yy::parser::make_MUL(loc); }
 "/"               { return yy::parser::make_DIV(loc); }
-
 "?"               { return yy::parser::make_SCAN(loc);  }
 "="               { return yy::parser::make_ASSIG(loc); }
 
@@ -47,12 +46,15 @@ ID      [a-z_]+
 "=="              { return yy::parser::make_EQ(loc);  }
 "!="              { return yy::parser::make_NEQ(loc); }
 
-"!"               { return yy::parser::make_NOT(loc);  }
+"%"               { return yy::parser::make_MOD(loc); }
+"!"               { return yy::parser::make_NOT(loc); }
+"||"              { return yy::parser::make_OR(loc);  }
+"&&"              { return yy::parser::make_AND(loc); }
 
 "if"              { return yy::parser::make_IF(loc);    }
 "else"            { return yy::parser::make_ELSE(loc);  }
 "while"           { return yy::parser::make_WHILE(loc); }
-"print"           { return yy::parser::make_PRINT(loc);  }
+"print"           { return yy::parser::make_PRINT(loc); }
 
 "//".*            { }
 

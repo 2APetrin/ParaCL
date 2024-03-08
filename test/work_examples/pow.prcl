@@ -1,0 +1,13 @@
+a   = ?;
+num = ?;
+
+res = 1;
+
+if (num > 0) {
+    while (num) {
+        res = res * a;
+        num = num - 1;
+    }
+
+    print res;
+}
