@@ -121,6 +121,22 @@ public:
 };
 
 //----------------------------------------------------------------------
+struct nop final : public i_node {
+    nop() = default;
+
+    void dump() const override {
+        std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
+        std::cout << "NOP" << std::endl << std::endl;
+    }
+
+    void graphviz_dump(std::ofstream& out) const override {
+        out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {NOP}}\", style = \"filled\", fillcolor = \"#CDA4DE\"];\n";
+    }
+
+    int execute() const override { return 0; }
+};
+
+//----------------------------------------------------------------------
 struct i_one_child : public i_node {
 protected:
     i_node *child_;
@@ -192,10 +208,12 @@ public:
     void graphviz_dump(std::ofstream& out) const override {
         out << "    node_" << this << "[shape = Mrecord, label = \"{{" << this << "} | {op_type=" << static_cast<int>(type_) << "}}\", style = \"filled\", fillcolor = \"#C5E384\"];\n";
 
-        for (auto && i : children_) {
+        for (auto && i : children_)
             i->graphviz_dump(out);
-            out << "    node_" << this << "->node_" << i << " [color = \"#1164B4\"];\n";
-        }
+
+        out << "    node_" << this << "->node_" << children_[0] << " [color = \"#FF2B2B\"];\n";
+        out << "    node_" << this << "->node_" << children_[1] << " [color = \"#1CAC78\"];\n";
+        out << "    node_" << this << "->node_" << children_[2] << " [color = \"#1164B4\"];\n";
     }
 
     void setn(int pos, i_node* node) {

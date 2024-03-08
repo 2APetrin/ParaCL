@@ -72,6 +72,11 @@ public:
     }
 
 //---------------------------------------------------------------------
+    node_ptr make_nop() {
+        return create_unique_push_get_ptr(new detail::nop{});
+    }
+
+//---------------------------------------------------------------------
     node_ptr make_identifier(std::string str, detail::scope* scp = nullptr) {
         return create_unique_push_get_ptr(new detail::identifier{str, scp});
     }

@@ -44,6 +44,10 @@ public:
         return tree.make_identifier(str, scp);
     }
 
+    ptd::i_node* make_nop() {
+        return tree.make_nop();
+    }
+
     void new_scope() { 
         curr_scope_ = static_cast<ptd::scope*>(tree.make_scope(curr_scope_)); 
     }
