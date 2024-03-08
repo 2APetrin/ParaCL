@@ -14,3 +14,24 @@ This project consists of two parts:</br>
 > To debug tree faster we used graphviz dumping.
 
 ## Frontend
+
+## Build
+Cloning
+```
+git clone https://github.com/2APetrin/ParaCL.git
+cd ParaCL
+```
+Making
+```
+cmake -B build
+cd build
+make
+```
+Using
+```
+./ParaCL *code path*
+```
+Example
+```
+./ParaCL ../test/work_examples/factorial.prcl
+```
