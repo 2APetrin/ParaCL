@@ -1,4 +1,4 @@
-fact_num = 12;
+fact_num = ?;
 
 if (fact_num <  0) print (-1);
 if (fact_num == 0) print ( 1);

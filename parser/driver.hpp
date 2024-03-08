@@ -1,23 +1,26 @@
 #pragma once
 
-#include "numgrammar.tab.hh"
+#include "grammar.tab.hh"
 #include "location.hh"
 #include "tree.hpp"
-#include <FlexLexer.h>
 
 
 namespace yy {
 
-class NumDriver {
+class driver {
     using node_ptr = para_tree::detail::i_node*;
 
 public:
     yy::location location;
 
-    para_tree::ast_tree tree;
-    ptd::scope* curr_scope_ = nullptr;
+    // Whether to generate parser and scanner debug traces.
+    bool trace_parsing  = false;
+    bool trace_scanning = false;
 
-    NumDriver() : curr_scope_(static_cast<ptd::scope*>(tree.make_scope())) {
+    para_tree::ast_tree tree;
+    ptd::scope* curr_scope_;
+
+    driver(ptd::scope* curr_scope = nullptr) : curr_scope_(static_cast<ptd::scope*>(tree.make_scope())) {
         tree.set_root(curr_scope_);
     }
 
@@ -58,40 +61,13 @@ public:
 
     ptd::i_node* make_scan() { return tree.make_scan(); }
 
-    template <ptop type>
-    void process_two_child_arith(ptd::i_node* &ret, ptd::i_node* left,
-                                 ptd::i_node* right = nullptr) {
-        auto ret_var = make_d_op<type>();
-
-        if (right) {
-            static_cast<ptd::i_two_child*>(right)->setl(left);
-            ret_var->setr(right);
-        }
-        else ret_var->setr(left);
-
-        ret = ret_var;
-    }
-
-    template <ptop type>
-    void process_two_child_logic(ptd::i_node* &ret, ptd::i_node* left,
-                                 ptd::i_node* right = nullptr) {
-        auto ret_var = make_d_op<type>();
-
-        ret_var->setl(left);
-        ret_var->setr(right);
-
-        ret = ret_var;
-    }
-
     void set_not_ok() { tree.is_ok = false; }
 
-    bool parse() {
-        location.initialize();
+    void parse_begin(const std::string& file);
 
-        parser parser(this);
-        bool res = parser.parse();
-        return !res;
-    }
+    void parse_end();
+
+    bool parse(const std::string& file);
 };
 
 } // namespace yy

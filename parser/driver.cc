@@ -1,14 +1,34 @@
 #include <iostream>
 
-#include "numdriver.hpp"
+#include "driver.hpp"
+#include "lexer.hh"
 
 extern "C" int yywrap() { return 1; }
 
-int main() try
+void yy::driver::parse_begin(const std::string& file)
 {
-  yy::NumDriver driver{};
-  driver.parse();
+    yyset_debug(trace_scanning);
+
+    if (file.empty () || file == "-") yyin = stdin;
+
+    else if (!(yyin = fopen (file.c_str (), "r"))) {
+        std::cerr << "Cannot open " << file << std::endl;
+        throw std::runtime_error("Bad file to parse");
+    }
 }
-catch (std::exception& exc) {
-    std::cout << exc.what() << std::endl;
+
+void yy::driver::parse_end() { fclose(yyin); }
+
+bool yy::driver::parse(const std::string& file) {
+    parse_begin(file);
+    location.initialize(&file);
+
+    yy::parser parser(this);
+    parser.set_debug_level(trace_parsing);
+
+    bool res = parser.parse();
+
+    parse_end();
+
+    return !res;
 }

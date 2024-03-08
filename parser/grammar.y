@@ -4,7 +4,7 @@
 %defines
 %define api.token.constructor
 %define api.value.type variant
-%param {yy::NumDriver* driver}
+%param {yy::driver* drv}
 
 %locations
 %define parse.trace
@@ -14,24 +14,23 @@
 %code requires
 {
     #include "tree.hpp"
+    #include <utility>
 
     namespace ptd  = para_tree::detail;
     using     ptop = para_tree::op_type;
 
-    namespace yy { class NumDriver; }
+    namespace yy { class driver; }
 }
 
 
 %code provides
 {
-    #include "numdriver.hpp"
+    #include "driver.hpp"
 
-    #define YY_DECL yy::parser::symbol_type yylex(yy::NumDriver* driver)
+    #define YY_DECL yy::parser::symbol_type yylex(yy::driver* drv)
 
     YY_DECL;
 }
-
-%precedence ELSE "else"
 
 %token
     ADD    "+"
@@ -68,6 +67,19 @@
     ERR
 ;
 
+%precedence THEN
+%precedence ELSE "else"
+
+%right    ASSIG
+%left     OR
+%left     AND
+%nonassoc EQ  NEQ
+%nonassoc BL BLE GR GRE
+%left     ADD SUB
+%left     MUL DIV MOD
+%nonassoc UPLUS UMINUS
+%right    NOT
+
 //--------------terminal--------------
 %token <int> NUMBER
 %token <std::string> ID
@@ -78,13 +90,11 @@
 %nterm <ptd::i_node*> scope_br
 %nterm <ptd::i_node*> scope_br_start
 
-%nterm <ptd::i_node*> op
-%nterm <ptd::i_node*> op_opened
-%nterm <ptd::i_node*> op_closed
-%nterm <ptd::i_node*> op_simple
-
 %nterm <ptd::i_node*> if
-%nterm <ptd::i_node*> if_start 
+%nterm <ptd::i_node*> if_start
+
+%nterm <ptd::scope*> else_start
+%nterm <std::pair<ptd::scope*, ptd::scope*>> else
 
 %nterm <ptd::i_two_child*> while
 %nterm <ptd::i_node*>      while_start
@@ -92,145 +102,118 @@
 %nterm <ptd::i_one_child*> lang_func
 
 //--------------expr--------------
-%nterm <ptd::i_node*> logic
-%nterm <ptd::i_node*> logic_rec
-%nterm <ptd::i_node*> logic_expr
-
+%nterm <ptd::i_node*> op
 %nterm <ptd::i_node*> expr
-
-%nterm <ptd::i_node*> T
-%nterm <ptd::i_node*> T_rec
-
-%nterm <ptd::i_node*> M
-%nterm <ptd::i_node*> M_rec
-
-%nterm <ptd::i_node*> Q
-%nterm <ptd::i_node*> Q_rec
-
-%nterm <ptd::i_node*> G
-%nterm <ptd::i_node*> P
+%nterm <ptd::i_node*> primary_expr
 //--------------------------------
 
 %start program
 
 %%
 
-program: scope { driver->tree.graphviz_dump(); /*driver->tree.execute_tree();*/ } ;
+program: scope {
+                #ifdef DUMP 
+                    drv->tree.graphviz_dump();
+                #endif
+                    drv->tree.execute_tree();
+                }
+                ;
 
 scope: op scope { }
      | %empty   { }
-;
-
-op: op_closed { }
-  | op_opened { }
-;
-
-//if_start op %prec ELSE op { $$ = driver->make_t_op<ptop::IF_ELSE>($1, $2, $3); } // I've written make_t_op for if with else use it! Ne cringe li ya sdelal?
-op_opened: IF KLB expr KRB op_opened                { std::cout << "cock-1\n"; }
-         | IF KLB expr KRB op_closed                { std::cout << "cock0\n";  }
-         | IF KLB expr KRB op_closed ELSE op_opened { std::cout << "cock1\n";  }
-         | while_opened                             { }
-         ;
-
-op_closed: op_simple                                { }
-         | IF KLB expr KRB op_closed ELSE op_closed { std::cout << "cock2\n"; }
-         | while_closed                             { }
-         ;
-
-op_simple: expr SCOLON   { $$ = $1; driver->curr_scope_->add_child($$); }
-         | lang_func     { $$ = $1; driver->curr_scope_->add_child($$); }
-         | scope_br      { $$ = $1; driver->curr_scope_->add_child($$); }
-         ;
-
-while_opened: WHILE KLB expr KRB op_opened {  } ; // rewrite using while_start
-
-while_closed: WHILE KLB expr KRB op_closed { } ; // rewrite using while_start
-
-lang_func: PRINT expr SCOLON { } ;
-
-scope_br: scope_br_start scope SRB { $$ = $1; driver->reset_scope(); } ;
-
-scope_br_start: SLB { driver->new_scope(); $$ = driver->curr_scope_; } ;
-
-expr: M { }
-    | ID ASSIG expr { // rewrite, vigladit huevo
-                ptd::i_node* tmp = nullptr;
-                ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
-
-                if (!id_scope) {
-                    tmp = driver->make_identifier($1, driver->curr_scope_);
-                    driver->curr_scope_->push_id($1);
-                }
-                else tmp = driver->make_identifier($1, id_scope);
-
-                $$ = driver->make_d_op<ptop::ASSIG>(tmp, $3);
-    }
-    ;
-
-// FUCK nado podumat' nad naming. M, Q, G, T huita
-M: Q M_rec { } ;
-
-M_rec: OR Q M_rec { }
-     | %empty     { }
      ;
 
-Q: logic_expr Q_rec { } ;
+op: expr SCOLON   { $$ = $1;              drv->curr_scope_->add_child($$); }
+  | while         { $$ = $1;              drv->curr_scope_->add_child($$); } 
+  | if            { $$ = $1;              drv->curr_scope_->add_child($$); }
+  | lang_func     { $$ = $1;              drv->curr_scope_->add_child($$); }
+  | scope_br      { $$ = $1;              drv->curr_scope_->add_child($$); }
+  | SCOLON        { $$ = drv->make_nop(); drv->curr_scope_->add_child($$); }
+  ;
 
-Q_rec: AND logic_expr Q_rec { }
-     | %empty               { }
-     ;
+scope_br: scope_br_start scope SRB { $$ = $1; drv->reset_scope(); } ;
 
-logic_expr : logic { $$ = $1; }
-           | logic GR  logic { driver->process_two_child_logic<ptop::GR> ($$, $1, $3); }
-           | logic GRE logic { driver->process_two_child_logic<ptop::GRE>($$, $1, $3); }
-           | logic BL  logic { driver->process_two_child_logic<ptop::BL> ($$, $1, $3); }
-           | logic BLE logic { driver->process_two_child_logic<ptop::BLE>($$, $1, $3); }
-           | logic EQ  logic { driver->process_two_child_logic<ptop::EQ> ($$, $1, $3); }
-           | logic NEQ logic { driver->process_two_child_logic<ptop::NEQ>($$, $1, $3); }
-           ;
+scope_br_start: SLB { drv->new_scope(); $$ = drv->curr_scope_; } ;
 
-logic: T logic_rec {
-    if ($2) { static_cast<ptd::i_two_child*>($2)->setl($1); $$ = $2; }
-    else    { $$ = $1; }
+expr: primary_expr
+    | expr ADD expr { $$ = drv->make_d_op<ptop::ADD>($1, $3); }
+    | expr SUB expr { $$ = drv->make_d_op<ptop::SUB>($1, $3); }
+    | expr MUL expr { $$ = drv->make_d_op<ptop::MUL>($1, $3); }
+    | expr DIV expr { $$ = drv->make_d_op<ptop::DIV>($1, $3); }
+    | expr MOD expr { $$ = drv->make_d_op<ptop::MOD>($1, $3); }
+    | expr GR  expr { $$ = drv->make_d_op<ptop::GR> ($1, $3); }
+    | expr GRE expr { $$ = drv->make_d_op<ptop::GRE>($1, $3); }
+    | expr BL  expr { $$ = drv->make_d_op<ptop::BL> ($1, $3); }
+    | expr BLE expr { $$ = drv->make_d_op<ptop::BLE>($1, $3); }
+    | expr EQ  expr { $$ = drv->make_d_op<ptop::EQ> ($1, $3); }
+    | expr NEQ expr { $$ = drv->make_d_op<ptop::NEQ>($1, $3); }
+    | expr AND expr { $$ = drv->make_d_op<ptop::AND>($1, $3); }
+    | expr OR  expr { $$ = drv->make_d_op<ptop::OR> ($1, $3); }
+    | NOT expr      { $$ = drv->make_s_op<ptop::NOT>($2);     }
+    | SUB expr %prec UMINUS { $$ = drv->make_s_op<ptop::UNARY_MINUS>($2); }
+    | ADD expr %prec UPLUS  { $$ = $2; }
+    | ID ASSIG expr {
+        ptd::i_node* tmp = nullptr;
+        ptd::scope* id_scope = drv->curr_scope_->is_visible($1);
+
+        if (!id_scope) {
+            tmp = drv->make_identifier($1, drv->curr_scope_);
+            drv->curr_scope_->push_id($1);
+        }
+        else tmp = drv->make_identifier($1, id_scope);
+
+        $$ = drv->make_d_op<ptop::ASSIG>(tmp, $3);
 }
 ;
 
-logic_rec: ADD T logic_rec { driver->process_two_child_arith<ptop::ADD>($$, $2, $3); }
-         | SUB T logic_rec { driver->process_two_child_arith<ptop::ADD>($$, driver->make_s_op<ptop::UNARY_MINUS>($2), $3); }
-         | %empty          { }
-         ;
-
-T: G T_rec {
-    if ($2) { static_cast<ptd::i_two_child*>($2)->setl($1); $$ = $2; }
-    else    { $$ = $1; }
-}
-;
-
-T_rec: MUL G T_rec { driver->process_two_child_arith<ptop::MUL>($$, $2, $3); }
-     | DIV G T_rec { driver->process_two_child_arith<ptop::DIV>($$, $2, $3); }
-     | %empty      { }
-     ;
-
-G: SUB P { $$ = driver->make_s_op<ptop::UNARY_MINUS>($2); };
- | ADD P { $$ = $2; }
- | NOT P { $$ = driver->make_s_op<ptop::NOT>($2); }
- | P     { $$ = $1; }
- ;
-
-P: KLB expr KRB { $$ = $2; }
+primary_expr: KLB expr KRB { $$ = $2; }
  | ID {
-    ptd::scope* id_scope = driver->curr_scope_->is_visible($1);
+    ptd::scope* id_scope = drv->curr_scope_->is_visible($1);
 
     if (!id_scope) {
-        std::cout << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
-        $$ = driver->make_identifier("UNDEFIND");
-        driver->set_not_ok();
+        std::cerr << "This id is not visible in this scope: " << $1 << " " << @1.begin << ":" << @1.end << std::endl;
+        $$ = drv->make_identifier("UNDEFIND");
+        drv->set_not_ok();
     }
-    else $$ = driver->make_identifier($1, id_scope);
+
+    else
+        $$ = drv->make_identifier($1, id_scope);
  }
- | NUMBER   { $$ = driver->make_number($1); }
- | SCAN     { $$ = driver->make_scan(); }
- ;
+ | NUMBER   { $$ = drv->make_number($1); }
+ | SCAN     { $$ = drv->make_scan(); }
+;
+
+if: if_start op %prec THEN {
+        $$ = drv->make_d_op<ptop::IF>($1, drv->curr_scope_);
+        drv->reset_scope();
+}
+  | if_start op else %prec ELSE {
+        $$ = drv->make_t_op<ptop::IF_ELSE>($1, $3.first, $3.second);
+        drv->reset_scope();
+}
+;
+
+else: else_start op {
+    $$ = std::make_pair($1, drv->curr_scope_);
+}
+;
+
+if_start: IF KLB expr KRB { drv->new_scope(); $$ = $3; } ;
+
+else_start: ELSE {
+    $$ = drv->curr_scope_;
+    drv->reset_scope(); drv->new_scope();
+} ;
+
+while: while_start op {
+    $$ = drv->make_d_op<ptop::WHILE>($1, drv->curr_scope_);
+    drv->reset_scope();
+}
+;
+
+while_start: WHILE KLB expr KRB { drv->new_scope(); $$ = $3; } ;
+
+lang_func: PRINT expr SCOLON { $$ = drv->make_s_op<ptop::PRINT>($2); } ;
 
 %%
 

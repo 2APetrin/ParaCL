@@ -2,9 +2,7 @@
 %option nounput noinput batch debug 
 
 %{
-
-#include "numgrammar.tab.hh"
-
+    #include "grammar.tab.hh"
 %}
 
 WS      [ \t\v\r]+
@@ -19,7 +17,7 @@ ID      [a-z_]+
 %}
 %%
 %{
-    yy::location& loc = driver->location;
+    yy::location& loc = drv->location;
     loc.step();
 %}
 
@@ -55,6 +53,8 @@ ID      [a-z_]+
 "else"            { return yy::parser::make_ELSE(loc);  }
 "while"           { return yy::parser::make_WHILE(loc); }
 "print"           { return yy::parser::make_PRINT(loc);  }
+
+"//".*            { }
 
 {ID}              { return yy::parser::make_ID(yytext, loc); }
 
