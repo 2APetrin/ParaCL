@@ -28,10 +28,14 @@ cmake -B build
 cd build
 make
 ```
+If graphviz is installed on your computer use `cmake -B build -DCMAKE_CXX_FLAGS="-DDUMP"` to have ast tree graphviz dump in ast/logs/images.
+
 Using
 ```
-./ParaCL *code path*
+./ParaCL [-s] [-p] *code path*
 ```
+-s and -p to generate parser and scanner debug traces respectively
+
 Example
 ```
 ./ParaCL ../test/work_examples/factorial.prcl
