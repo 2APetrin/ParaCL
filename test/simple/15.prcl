@@ -1,0 +1,9 @@
+// id names test
+x1      = 1;
+x_2     = 2;
+_x__3   = 3;
+X_4y_q  = 4;
+$o0_$$_0o$ = 5; // it works in C :)
+
+
+print x1 + x_2 + _x__3 + X_4y_q + $o0_$$_0o$;

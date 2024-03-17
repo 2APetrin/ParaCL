@@ -9,7 +9,8 @@ WS      [ \t\v\r]+
 NS      [\n]+
 DIGIT   [0-9]
 DIGIT1  [1-9]
-ID      [a-z_]+
+ID_B    [A-Za-z_$]
+ID_E    [A-Za-z_$0-9]
 
 %{
     #define yyterminate() yy::parser::make_YYEOF(loc);
@@ -58,7 +59,7 @@ ID      [a-z_]+
 
 "//".*            { }
 
-{ID}              { return yy::parser::make_ID(yytext, loc); }
+{ID_B}{ID_E}*     { return yy::parser::make_ID(yytext, loc); }
 
 0                 { return yy::parser::make_NUMBER(0, loc); }
 {DIGIT1}{DIGIT}*  { return yy::parser::make_NUMBER(std::atoi(yytext), loc); }
