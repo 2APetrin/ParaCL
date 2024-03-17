@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -DNDEBUG CMakeFiles/ParaCL.dir/main.cc.o CMakeFiles/ParaCL.dir/parser/driver.cc.o CMakeFiles/ParaCL.dir/parser.cc.o CMakeFiles/ParaCL.dir/lexer.cc.o -o ParaCL 

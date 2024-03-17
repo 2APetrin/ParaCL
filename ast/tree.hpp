@@ -4,9 +4,15 @@
 #include <cstring>
 #include <memory>
 
+#include <filesystem>
+#include <sys/types.h>
+#include <unistd.h>
+
 namespace para_tree {
 
 namespace detail {
+
+static int img_count = 0;
 
 //---------------------------rule of zero---------------------------
 class node_manager {
@@ -25,7 +31,6 @@ protected:
 
 } /*namespace detail*/
 
-static int img_count = 0;
 
 //-------------------------------ast_tree-------------------------------
 class ast_tree final : private detail::node_manager {
@@ -102,7 +107,7 @@ public:
 
 //---------------------------------------------------------------------
     int execute_tree() const {
-        if (is_ok) 
+        if (is_ok)
             return root_->execute(); 
         throw std::runtime_error("Compilation error. Check messages upper.");
     }
@@ -118,28 +123,27 @@ public:
     }
 
     void graphviz_dump() const {
+        namespace fs = std::filesystem;
+
+        auto file_folder = fs::absolute(__FILE__).parent_path().parent_path();
+        fs::path pth     = fs::canonical(file_folder.string());
+
         std::ofstream out;
-        open_grapviz(out);
+        open_grapviz(out, pth);
 
         root_->graphviz_dump(out);
 
         close_graphviz(out);
 
-        char sys_cmd[200] = "dot ../ast/logs/log_graphviz.dot -Tpng -o ../ast/logs/images/tree_dump";
-        snprintf(sys_cmd + strlen(sys_cmd), 30, "%d.png", img_count);
-        system(sys_cmd);
+        exec_dump_process(pth);
 
-        std::cout << "COMMAND=" << sys_cmd << std::endl;
-
-        std::cout << img_count << " dump made\n";
-        img_count++;
+        std::cout << detail::img_count++ << " dump made\n";
     }
 
 //---------------------------------------------------------------------
 private:
-    int open_grapviz(std::ofstream &out) const {
-        out.open("../ast/logs/log_graphviz.dot");
-
+    int open_grapviz(std::ofstream &out, auto &&pth) const {
+        out.open(pth.string() + "/ast/logs/graphviz/graphviz" + std::to_string(detail::img_count) + ".dot" );
         if (!out.is_open()) {
             std::cerr << "Cannot open graphviz file. Programm shutdown\n";
             return 1;
@@ -147,6 +151,20 @@ private:
 
         out << "digraph\n{\n";
         return 0;
+    }
+
+
+    void exec_dump_process(auto &&pth) const {
+        pid_t p = fork();
+        if  (!p) {
+            execl((pth.string() + "/ast/logs/dump.sh").c_str(),
+                  (pth.string() + "/ast/logs/dump.sh").c_str(),
+                  (pth.string() + "/ast/logs").c_str(),
+                   std::to_string(detail::img_count).c_str(),
+                   NULL);
+            perror(strerror(errno));
+            exit(1);
+        }
     }
 
 
