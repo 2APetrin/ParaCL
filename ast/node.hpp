@@ -64,7 +64,6 @@ public:
         for (auto && i : children_) {
             i->graphviz_dump(out);
             out << "    node_" << this << "->node_" << i << " [color = \"#293133\"];\n";
-            std::cout << i << std::endl;
         }
     }
 
@@ -202,7 +201,6 @@ public:
     void dump() const override {
         std::cout << "DUMP " << this << " " << typeid(*this).name() << std::endl;
         std::cout << "three children:" << std::endl;
-        for (auto && i : children_) std::cout << i << std::endl;
     }
 
     void graphviz_dump(std::ofstream& out) const override {

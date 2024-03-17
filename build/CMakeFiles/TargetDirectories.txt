@@ -1,3 +1,0 @@
-/home/tony/code/cxx/ParaCL/build/CMakeFiles/ParaCL.dir
-/home/tony/code/cxx/ParaCL/build/CMakeFiles/edit_cache.dir
-/home/tony/code/cxx/ParaCL/build/CMakeFiles/rebuild_cache.dir
