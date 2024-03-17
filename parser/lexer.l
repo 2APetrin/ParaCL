@@ -15,6 +15,14 @@ ID_E    [A-Za-z_$0-9]
 %{
     #define yyterminate() yy::parser::make_YYEOF(loc);
     #define YY_USER_ACTION loc.columns(yyleng);
+
+    yy::parser::symbol_type make_NUMBER(const std::string &str,  const yy::parser::location_type& loc)
+    {
+        long n = strtol(str.c_str(), NULL, 10);
+        if (!(INT_MIN <= n && n <= INT_MAX))
+            throw yy::parser::syntax_error(loc, "integer is out of range: " + str);
+        return yy::parser::make_NUMBER(static_cast<int>(n), loc);
+    }
 %}
 %%
 %{
@@ -62,7 +70,7 @@ ID_E    [A-Za-z_$0-9]
 {ID_B}{ID_E}*     { return yy::parser::make_ID(yytext, loc); }
 
 0                 { return yy::parser::make_NUMBER(0, loc); }
-{DIGIT1}{DIGIT}*  { return yy::parser::make_NUMBER(std::atoi(yytext), loc); }
+{DIGIT1}{DIGIT}*  { return make_NUMBER(yytext, loc); }
 .                 { throw  yy::parser::syntax_error(loc, "invalid character: " + std::string(yytext)); }
 
 <<EOF>>     { return yyterminate(); }
